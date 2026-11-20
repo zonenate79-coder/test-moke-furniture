@@ -13,12 +13,17 @@ const firebaseConfig = {
 
 // Initialize Firebase
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+  try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('🔥 Firebase initialized successfully.');
+  } catch (err) {
+    console.error('Firebase init error:', err);
+  }
 }
 
 const firestoreDb = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 
-const MokeCloud = {
+window.MokeCloud = {
   COLLECTIONS: {
     PRODUCTS: 'products',
     ORDERS: 'orders'
@@ -26,11 +31,14 @@ const MokeCloud = {
 
   // Listen to live catalog updates across all devices
   onProductsSync(callback) {
-    if (!firestoreDb) return;
+    if (!firestoreDb) {
+      console.warn('Firestore DB not ready for sync.');
+      return;
+    }
     return firestoreDb.collection(this.COLLECTIONS.PRODUCTS).onSnapshot(
       (snapshot) => {
         if (snapshot.empty) {
-          // If remote cloud collection is empty on first run, seed with default productsData
+          console.log('Firebase collection empty, seeding initial 30 pieces...');
           this.seedInitialProducts();
           return;
         }
@@ -38,27 +46,34 @@ const MokeCloud = {
         snapshot.forEach(doc => {
           cloudProducts.push({ id: doc.id, ...doc.data() });
         });
-        // Cache to localStorage for fast offline fallback
         localStorage.setItem('moke_custom_products', JSON.stringify(cloudProducts));
-        callback(cloudProducts);
+        console.log(`⚡ Received ${cloudProducts.length} live products from Firebase Cloud.`);
+        if (typeof callback === 'function') {
+          callback(cloudProducts);
+        }
       },
       (error) => {
-        console.warn('Firestore live sync error, falling back to local storage:', error);
+        console.error('Firestore live sync error:', error);
       }
     );
   },
 
   // Save or update a product in the cloud
   async saveProduct(product) {
-    if (!firestoreDb) return false;
+    if (!firestoreDb) {
+      console.error('Firestore DB not available to save product.');
+      return false;
+    }
     try {
       const docId = product.id;
       const cleanData = { ...product };
       delete cleanData.id;
       await firestoreDb.collection(this.COLLECTIONS.PRODUCTS).doc(docId).set(cleanData, { merge: true });
+      console.log('✅ Successfully saved piece to Cloud Firestore:', docId);
       return true;
     } catch (e) {
-      console.error('Error saving product to Firebase:', e);
+      console.error('❌ Error saving product to Firebase:', e);
+      alert('Firebase Cloud save error: ' + (e.message || e));
       return false;
     }
   },
@@ -68,9 +83,10 @@ const MokeCloud = {
     if (!firestoreDb) return false;
     try {
       await firestoreDb.collection(this.COLLECTIONS.PRODUCTS).doc(productId).delete();
+      console.log('✅ Deleted piece from Cloud Firestore:', productId);
       return true;
     } catch (e) {
-      console.error('Error deleting product from Firebase:', e);
+      console.error('❌ Error deleting product from Firebase:', e);
       return false;
     }
   },
@@ -87,7 +103,7 @@ const MokeCloud = {
         batch.set(ref, data);
       });
       await batch.commit();
-      console.log('Firebase Cloud Database seeded with 30 Moke Furniture pieces.');
+      console.log('✅ Firebase Cloud Database seeded with 30 Moke Furniture pieces.');
     } catch (e) {
       console.warn('Seed note:', e);
     }
@@ -108,3 +124,6 @@ const MokeCloud = {
     }
   }
 };
+
+// Ensure global accessibility across all contexts
+var MokeCloud = window.MokeCloud;
