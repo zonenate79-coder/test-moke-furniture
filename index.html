@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOKE FURNITURE | Sofas, Chairs & Tables</title>
+  
+  <!-- Google Fonts: Cormorant Garamond & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            stone: {
+              50: '#FAF8F5',
+              100: '#F3EFEA',
+              200: '#E6DFD5',
+              300: '#D5C9BC',
+              800: '#2C2825',
+              900: '#1A1816',
+            },
+            moke: {
+              cream: '#FDFCFA',
+              sand: '#EFE9DE',
+              wood: '#8E5A3C',
+              dark: '#161413'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google 3D & AR Model Viewer -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F3EFEA;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D5C9BC;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #8E5A3C;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- Top Announcement Bar -->
+  <aside aria-label="Announcement" class="bg-stone-900 text-stone-200 text-[11px] font-medium tracking-widest uppercase py-2 px-4 text-center border-b border-stone-800">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-3">
+      <span>Complimentary White-Glove In-Home Assembly on orders over $1,500</span>
+      <span class="hidden md:inline text-stone-600">•</span>
+      <span class="hidden md:inline text-stone-400">Handcrafted Sustainable Timber</span>
+    </div>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Left: Direct Section Links -->
+      <nav aria-label="Quick Category" class="hidden md:flex items-center gap-8 text-xs font-medium uppercase tracking-widest text-stone-600">
+        <a href="#sofas" class="hover:text-stone-900 transition">Sofas</a>
+        <a href="#chairs" class="hover:text-stone-900 transition">Chairs</a>
+        <a href="#tables" class="hover:text-stone-900 transition">Tables</a>
+        <a href="#about" class="hover:text-stone-900 transition">Craftsmanship</a>
+      </nav>
+
+      <button id="mobile-menu-btn" class="md:hidden p-2 text-stone-700 hover:text-stone-900" aria-label="Open navigation menu">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Center: Brand Logo (Placeholder ready to swap for logo image) -->
+      <div class="text-center">
+        <a href="#" class="group inline-flex flex-col items-center">
+          <!-- 
+            [LOGO PLACEHOLDER NOTE]
+            You can drop your official logo here anytime:
+            <img src="path-to-your-logo.png" alt="Moke Furniture" class="h-9 w-auto" />
+          -->
+          <span class="font-serif text-2xl sm:text-3xl tracking-[0.25em] font-normal uppercase text-stone-900 group-hover:text-amber-900 transition">
+            MOKE
+          </span>
+          <span class="text-[9px] uppercase tracking-[0.35em] text-stone-400 -mt-1 font-sans">
+            FURNITURE
+          </span>
+        </a>
+      </div>
+
+      <!-- Right: Action Icons (Bag) -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <button id="cart-btn" class="relative p-2.5 text-stone-800 hover:text-stone-950 transition rounded-full hover:bg-stone-100 flex items-center gap-2 border border-stone-200" aria-label="Shopping bag">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider">Bag</span>
+          <span id="cart-badge" class="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md transition opacity-0">
+            0
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Dropdown -->
+  <div id="mobile-menu" class="hidden md:hidden bg-stone-900 text-white px-6 py-6 border-b border-stone-800 transition-all">
+    <div class="flex flex-col gap-4 text-sm uppercase tracking-wider font-medium">
+      <a href="#sofas" onclick="toggleMobileMenu()" class="hover:text-amber-300">Sofas</a>
+      <a href="#chairs" onclick="toggleMobileMenu()" class="hover:text-amber-300">Chairs</a>
+      <a href="#tables" onclick="toggleMobileMenu()" class="hover:text-amber-300">Tables</a>
+      <a href="#about" onclick="toggleMobileMenu()" class="hover:text-amber-300">The Moke Craft</a>
+    </div>
+  </div>
+
+  <main>
+  <!-- ========================================================================= -->
+  <!-- HERO / INTRO BANNER (Balanced Rich Neutral - "A Tiny Bit Darker")         -->
+  <!-- ========================================================================= -->
+  <section class="relative bg-stone-900 text-white overflow-hidden border-b border-stone-800">
+    <!-- Background Interior Image -->
+    <div class="absolute inset-0">
+      <img 
+        src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1800&q=80" 
+        alt="Moke Living Room Interior" 
+        class="w-full h-full object-cover object-center"
+      />
+      <!-- Balanced 45% warm espresso scrim: rich depth without pitch black -->
+      <div class="absolute inset-0 bg-stone-950/50 backdrop-blur-[1px]"></div>
+    </div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40 flex flex-col items-center text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-stone-200 text-xs uppercase tracking-widest mb-6">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        The 2026 Collection • Handcrafted Silhouettes
+      </div>
+
+      <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal max-w-4xl tracking-tight leading-[1.1] mb-6 text-white drop-shadow-sm">
+        Sculptural Form.<br>Honest Craftsmanship.
+      </h1>
+
+      <p class="text-stone-200 text-base sm:text-lg max-w-2xl font-light leading-relaxed mb-10 drop-shadow">
+        Pure architectural geometry meets master artisan joinery. Handcrafted sofas, chairs, and tables built to outlast trends and anchor your home.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a href="#sofas" class="px-8 py-4 bg-white text-stone-900 rounded-full text-xs font-semibold uppercase tracking-widest hover:bg-stone-200 transition shadow-xl">
+          Explore Collection
+        </a>
+        <a href="#about" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-semibold uppercase tracking-widest backdrop-blur-md border border-white/25 transition">
+          Our Philosophy
+        </a>
+      </div>
+
+      <!-- Quick Category Jumpers -->
+      <div class="grid grid-cols-3 gap-3 sm:gap-6 w-full max-w-xl mt-16 pt-12 border-t border-white/20 text-center">
+        <a href="#sofas" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
+          <span class="block text-2xl mb-1">🛋️</span>
+          <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Sofas</span>
+        </a>
+        <a href="#chairs" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
+          <span class="block text-2xl mb-1">🪑</span>
+          <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Chairs</span>
+        </a>
+        <a href="#tables" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
+          <span class="block text-2xl mb-1">🪵</span>
+          <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Tables</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 1. SOFAS SECTION (With Type / Material Filters + "See More" Button)       -->
+  <!-- ========================================================================= -->
+  <section id="sofas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-b border-stone-200">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-stone-200 gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-widest text-amber-900 mb-1 block">Living Room Anchors</span>
+        <h2 class="font-serif text-3xl sm:text-4xl text-stone-900 font-normal">Sofas</h2>
+        <p class="text-stone-500 text-xs sm:text-sm mt-1">Sculpted for deep relaxation, tactile linen, and cloud-like comfort.</p>
+      </div>
+
+      <!-- Option B: Sofas Material Filters -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-[11px] uppercase tracking-wider text-stone-400 font-medium mr-1">Material:</span>
+        <button onclick="setSectionFilter('sofas', 'all')" class="sofas-chip px-3 py-1.5 rounded-full border transition-all bg-stone-900 text-white border-stone-900">
+          All
+        </button>
+        <button onclick="setSectionFilter('sofas', 'leather')" class="sofas-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Leather
+        </button>
+        <button onclick="setSectionFilter('sofas', 'boucle')" class="sofas-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Bouclé
+        </button>
+        <button onclick="setSectionFilter('sofas', 'linen')" class="sofas-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Linen
+        </button>
+        <button onclick="setSectionFilter('sofas', 'wood')" class="sofas-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Wood Frame
+        </button>
+      </div>
+    </div>
+
+    <!-- Sofas Grid (2 Side-by-Side on Phone, 3 on Desktop) -->
+    <div id="sofas-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+      <!-- Injected by app.js -->
+    </div>
+
+    <!-- Sofas "See More" Container -->
+    <div id="sofas-see-more" class="mt-12 text-center">
+      <!-- Injected dynamically by app.js -->
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 2. CHAIRS SECTION (With Type / Material Filters + "See More" Button)      -->
+  <!-- ========================================================================= -->
+  <section id="chairs" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-b border-stone-200">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-stone-200 gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-widest text-amber-900 mb-1 block">Accent & Dining</span>
+        <h2 class="font-serif text-3xl sm:text-4xl text-stone-900 font-normal">Chairs</h2>
+        <p class="text-stone-500 text-xs sm:text-sm mt-1">Danish paper cord, bentwood walnut, and steam-curved silhouettes.</p>
+      </div>
+
+      <!-- Option B: Chairs Material Filters -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-[11px] uppercase tracking-wider text-stone-400 font-medium mr-1">Material:</span>
+        <button onclick="setSectionFilter('chairs', 'all')" class="chairs-chip px-3 py-1.5 rounded-full border transition-all bg-stone-900 text-white border-stone-900">
+          All
+        </button>
+        <button onclick="setSectionFilter('chairs', 'leather')" class="chairs-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Leather
+        </button>
+        <button onclick="setSectionFilter('chairs', 'wood')" class="chairs-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Oak & Cord
+        </button>
+        <button onclick="setSectionFilter('chairs', 'boucle')" class="chairs-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Bouclé
+        </button>
+        <button onclick="setSectionFilter('chairs', 'velvet')" class="chairs-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Velvet
+        </button>
+      </div>
+    </div>
+
+    <!-- Chairs Grid (2 Side-by-Side on Phone, 3 on Desktop) -->
+    <div id="chairs-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+      <!-- Injected by app.js -->
+    </div>
+
+    <!-- Chairs "See More" Container -->
+    <div id="chairs-see-more" class="mt-12 text-center">
+      <!-- Injected dynamically by app.js -->
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 3. TABLES SECTION (With Type / Material Filters + "See More" Button)      -->
+  <!-- ========================================================================= -->
+  <section id="tables" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-b border-stone-200">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-stone-200 gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-widest text-amber-900 mb-1 block">Architectural Surfaces</span>
+        <h2 class="font-serif text-3xl sm:text-4xl text-stone-900 font-normal">Tables</h2>
+        <p class="text-stone-500 text-xs sm:text-sm mt-1">Fluted solid white oak, honed Italian travertine, and reclaimed elm.</p>
+      </div>
+
+      <!-- Option B: Tables Material Filters -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-[11px] uppercase tracking-wider text-stone-400 font-medium mr-1">Material:</span>
+        <button onclick="setSectionFilter('tables', 'all')" class="tables-chip px-3 py-1.5 rounded-full border transition-all bg-stone-900 text-white border-stone-900">
+          All
+        </button>
+        <button onclick="setSectionFilter('tables', 'wood')" class="tables-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Solid Oak & Elm
+        </button>
+        <button onclick="setSectionFilter('tables', 'stone')" class="tables-chip px-3 py-1.5 rounded-full border transition-all bg-white text-stone-700 border-stone-200 hover:border-stone-400">
+          Travertine & Marble
+        </button>
+      </div>
+    </div>
+
+    <!-- Tables Grid (2 Side-by-Side on Phone, 3 on Desktop) -->
+    <div id="tables-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+      <!-- Injected by app.js -->
+    </div>
+
+    <!-- Tables "See More" Container -->
+    <div id="tables-see-more" class="mt-12 text-center">
+      <!-- Injected dynamically by app.js -->
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- ABOUT / CRAFTSMANSHIP SECTION                                             -->
+  <!-- ========================================================================= -->
+  <section id="about" class="bg-stone-100/70 border-t border-stone-200 py-20 sm:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-widest text-amber-900 mb-2 block">Our Standard</span>
+          <h2 class="font-serif text-3xl sm:text-5xl font-normal text-stone-900 leading-tight mb-6">
+            Furniture made for real living, built to span generations.
+          </h2>
+          <p class="text-stone-600 leading-relaxed mb-6">
+            At Moke Furniture, we reject disposable design. Every curve, mortise joint, and stitch is calculated to harmonize architectural proportion with everyday comfort. We partner exclusively with certified sustainable forestry and ethical tanneries.
+          </p>
+          <div class="grid grid-cols-2 gap-6 pt-4 border-t border-stone-200">
+            <div>
+              <span class="font-serif text-3xl text-stone-900 font-normal">100%</span>
+              <span class="block text-xs uppercase tracking-wider text-stone-500 mt-1">FSC-Certified Solid Timber</span>
+            </div>
+            <div>
+              <span class="font-serif text-3xl text-stone-900 font-normal">10 Years</span>
+              <span class="block text-xs uppercase tracking-wider text-stone-500 mt-1">Structural Frame Guarantee</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+          <img 
+            src="https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?auto=format&fit=crop&w=1200&q=80" 
+            alt="Artisan woodworking studio" 
+            class="w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-stone-900/60 to-transparent flex items-end p-8">
+            <p class="text-white text-xs uppercase tracking-widest font-medium">The Moke Joinery Studio • Hand-Buffed Finishes</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Pillar Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-2xl border border-stone-200">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-900 flex items-center justify-center mb-5">
+            <i data-lucide="trees" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif text-xl text-stone-900 mb-2">Sustainable Forestry</h3>
+          <p class="text-xs text-stone-500 leading-relaxed">
+            All white oak, walnut, ash, and elm are responsibly harvested from managed European and American woodlands.
+          </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl border border-stone-200">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-900 flex items-center justify-center mb-5">
+            <i data-lucide="truck" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif text-xl text-stone-900 mb-2">White-Glove Delivery</h3>
+          <p class="text-xs text-stone-500 leading-relaxed">
+            Our two-person specialized delivery team unboxes, inspects, positions, and clears all packaging material.
+          </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl border border-stone-200">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-900 flex items-center justify-center mb-5">
+            <i data-lucide="sparkles" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif text-xl text-stone-900 mb-2">Tactile Textures</h3>
+          <p class="text-xs text-stone-500 leading-relaxed">
+            Curated tactile heavy bouclé, Belgian pure flax linen, and natural Italian travertine stones tested for high endurance.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter & Showroom Banner -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-stone-900 text-white rounded-3xl p-8 sm:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div class="max-w-lg">
+        <span class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2 block">Private Design Consultation</span>
+        <h3 class="font-serif text-2xl sm:text-4xl font-normal mb-3">Experience Moke In Person</h3>
+        <p class="text-stone-300 text-xs sm:text-sm font-light leading-relaxed">
+          Visit our flagship studio or schedule a complimentary 1-on-1 virtual styling session with our interior design architects.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <button onclick="showToast('Showroom booking requested. An advisor will contact you within 24h.')" class="px-6 py-3.5 bg-white text-stone-900 rounded-full text-xs font-semibold uppercase tracking-widest hover:bg-stone-200 transition shadow">
+          Book Showroom Visit
+        </button>
+        <button onclick="showToast('Material Swatch Kit dispatched to your address.')" class="px-6 py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-full text-xs font-semibold uppercase tracking-widest border border-stone-700 transition">
+          Order Swatch Box
+        </button>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-stone-200 text-stone-600 text-xs py-14">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
+        <div class="md:col-span-2">
+          <!-- Logo Footer -->
+          <div class="font-serif text-2xl tracking-[0.25em] font-normal uppercase text-stone-900 mb-2">
+            MOKE
+          </div>
+          <span class="text-[9px] uppercase tracking-[0.35em] text-stone-400 block mb-4">FURNITURE</span>
+          <p class="text-stone-500 max-w-sm text-xs leading-relaxed mb-6">
+            Architectural furniture designed for mindful living. Sofas, dining & lounge chairs, and sculptural tables handcrafted with FSC-certified timber.
+          </p>
+
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Collection</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#sofas" class="hover:text-stone-900 transition">Sofas</a></li>
+            <li><a href="#chairs" class="hover:text-stone-900 transition">Chairs</a></li>
+            <li><a href="#tables" class="hover:text-stone-900 transition">Tables</a></li>
+            <li><a href="#about" class="hover:text-stone-900 transition">Craftsmanship</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Services</h4>
+          <ul class="space-y-2.5">
+            <li><a href="javascript:void(0)" onclick="showToast('Complimentary White-Glove delivery applied at checkout over $1,500')" class="hover:text-stone-900 transition">White-Glove Assembly</a></li>
+            <li><a href="javascript:void(0)" onclick="showToast('Sample kit contains 8 tactile wood & fabric swatches')" class="hover:text-stone-900 transition">Material Swatches</a></li>
+            <li><a href="javascript:void(0)" onclick="showToast('10-Year Warranty covers solid timber frame and structural joints')" class="hover:text-stone-900 transition">10-Year Warranty</a></li>
+            <li><a href="javascript:void(0)" onclick="showToast('30-Day in-home trial included with all orders')" class="hover:text-stone-900 transition">30-Day In-Home Trial</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Flagship Showrooms</h4>
+          <ul class="space-y-2.5 text-stone-500">
+            <li>42 Mercer Street, Soho, New York</li>
+            <li>8700 Melrose Ave, West Hollywood</li>
+            <li>Gothersgade 12, Copenhagen</li>
+            <li class="pt-2 text-stone-900 font-medium">Mon - Sat: 10:00 - 19:00</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Dedicated Bottom Copyright Bar: Absolute end on mobile and desktop -->
+      <div class="pt-8 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <p class="text-[11px] text-stone-400 tracking-wide">
+          © 2026 Moke Furniture. Handcrafted with FSC Timber. All rights reserved.
+        </p>
+        <div class="flex items-center gap-6 text-[11px] text-stone-400">
+          <a href="javascript:void(0)" class="hover:text-stone-700 transition">Privacy Policy</a>
+          <span>•</span>
+          <a href="javascript:void(0)" class="hover:text-stone-700 transition">Terms of Service</a>
+          <span>•</span>
+          <a href="javascript:void(0)" class="hover:text-stone-700 transition">White-Glove Guarantee</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- QUICK VIEW MODAL (Option A: Slide-up Bottom Sheet on Mobile, Centered on Desktop) -->
+  <div id="quick-view-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-6 lg:p-8">
+    <div id="quick-view-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
+    
+    <div class="relative bg-white rounded-t-3xl sm:rounded-3xl max-w-full sm:max-w-xl md:max-w-4xl w-full p-4 sm:p-8 max-h-[90vh] sm:max-h-[88vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
+      <!-- Mobile Pull Bar Handle (Option A Bottom Sheet) -->
+      <div class="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-3 sm:hidden"></div>
+
+      <button 
+        id="close-quick-view-btn" 
+        class="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-1.5 sm:p-2 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 transition z-20" 
+        aria-label="Close modal">
+        <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+      </button>
+
+      <div id="quick-view-content">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SLIDE-OVER SHOPPING BAG DRAWER                                            -->
+  <!-- ========================================================================= -->
+  <div id="cart-backdrop" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+  
+  <div id="cart-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-stone-200">
+    <!-- Header -->
+    <div class="p-6 border-b border-stone-200 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="shopping-bag" class="w-5 h-5 text-stone-900"></i>
+        <h3 class="font-serif text-xl text-stone-900">Your Shopping Bag</h3>
+      </div>
+      <button id="close-cart-btn" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close bag">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Free Shipping Progress -->
+    <div class="px-6 py-3.5 bg-amber-50/70 border-b border-amber-100">
+      <div class="flex items-center justify-between text-xs text-amber-950 mb-1.5" id="free-shipping-text">
+        Add <strong>$1,500</strong> for complimentary White-Glove Delivery
+      </div>
+      <div class="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
+        <div id="free-shipping-progress" class="bg-amber-900 h-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Cart Items Scroll Area -->
+    <div id="cart-items-container" class="flex-grow overflow-y-auto p-6 space-y-4">
+      <!-- Injected by app.js -->
+    </div>
+
+    <!-- Footer Checkout -->
+    <div class="p-6 border-t border-stone-200 bg-stone-50">
+      <div class="flex justify-between items-center text-xs text-stone-500 mb-1.5">
+        <span>Estimated Subtotal</span>
+        <span id="cart-subtotal" class="font-semibold text-stone-900">$0</span>
+      </div>
+      <div class="flex justify-between items-center text-xs text-stone-500 mb-4">
+        <span>Delivery</span>
+        <span class="text-emerald-700 font-medium">Calculated next step</span>
+      </div>
+      <div class="flex justify-between items-center text-base font-serif text-stone-900 pt-3 border-t border-stone-200 mb-5">
+        <span>Total</span>
+        <span id="cart-total" class="font-semibold font-sans">$0</span>
+      </div>
+      <button 
+        id="checkout-btn" 
+        class="w-full py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
+        <i data-lucide="lock" class="w-4 h-4"></i> Proceed to Checkout
+      </button>
+      <p class="text-[10px] text-center text-stone-400 mt-3 flex items-center justify-center gap-1">
+        <i data-lucide="shield" class="w-3 h-3"></i> Encrypted 256-bit SSL Checkout
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TELEGRAM & DIRECT CHECKOUT MODAL (@N8bee)                                 -->
+  <!-- ========================================================================= -->
+  <div id="checkout-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-6">
+    <div id="checkout-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
+    
+    <div class="relative bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
+      <div class="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-3 sm:hidden"></div>
+      
+      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-serif text-xl text-stone-900 leading-none">Confirm Delivery & Pay</h3>
+            <span class="text-[10px] text-stone-500 uppercase tracking-wider font-medium">Direct Verification with <strong class="text-sky-700">@N8bee</strong></span>
+          </div>
+        </div>
+        <button id="close-checkout-btn" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close checkout">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Order Mini Summary -->
+      <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 mb-5 text-xs">
+        <div class="flex justify-between items-center text-stone-500 mb-1.5">
+          <span>Order Items:</span>
+          <span id="checkout-item-count" class="font-semibold text-stone-900">0 items</span>
+        </div>
+        <div class="flex justify-between items-center text-stone-500 mb-2">
+          <span>Total Order Value:</span>
+          <span id="checkout-total-val" class="font-bold text-stone-900 text-sm">$0</span>
+        </div>
+        <div id="checkout-delivery-badge" class="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60 flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+          <span id="checkout-delivery-text">Complimentary White-Glove In-Home Assembly included</span>
+        </div>
+      </div>
+
+      <!-- Bank & Mobile Payment Options (CBE & Telebirr) -->
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700">Select Payment Method (100% Full Payment) *</label>
+          <span class="text-[10px] font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md">Full Payment Required</span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <button 
+            type="button" 
+            id="pay-cbe-btn" 
+            onclick="selectPaymentMethod('cbe')" 
+            class="p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-900 bg-stone-900 text-white shadow-sm">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider">🏛️ CBE Bank</span>
+              <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
+            </div>
+            <span class="text-[10px] text-stone-300">Commercial Bank of Ethiopia</span>
+          </button>
+
+          <button 
+            type="button" 
+            id="pay-telebirr-btn" 
+            onclick="selectPaymentMethod('telebirr')" 
+            class="p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider">📱 Telebirr</span>
+              <i data-lucide="circle" class="w-3.5 h-3.5 text-stone-300"></i>
+            </div>
+            <span class="text-[10px] text-stone-500">Ethio Telecom Mobile Money</span>
+          </button>
+        </div>
+
+        <!-- CBE Account Details Box -->
+        <div id="cbe-details-box" class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-stone-500 font-medium text-[11px]">CBE Account Number:</span>
+            <button type="button" onclick="copyToClipboard('100000838', this)" class="text-[10px] font-semibold text-stone-900 bg-white border border-stone-300 hover:bg-stone-100 px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm transition">
+              <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
+            </button>
+          </div>
+          <div class="font-mono text-base font-bold text-stone-900 tracking-wider mb-1">100000838</div>
+          <div class="text-[11px] text-stone-600">Account Name: <strong>Moke Furniture Studio</strong></div>
+          <p class="text-[10px] text-amber-900 mt-2 font-medium">⚠️ Please make full transfer, then attach screenshot below before dispatch.</p>
+        </div>
+
+        <!-- Telebirr Account Details Box -->
+        <div id="telebirr-details-box" class="hidden p-3.5 rounded-2xl bg-sky-50/80 border border-sky-200 text-xs">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-stone-500 font-medium text-[11px]">Telebirr Number:</span>
+            <button type="button" onclick="copyToClipboard('28398387', this)" class="text-[10px] font-semibold text-stone-900 bg-white border border-stone-300 hover:bg-stone-100 px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm transition">
+              <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
+            </button>
+          </div>
+          <div class="font-mono text-base font-bold text-stone-900 tracking-wider mb-1">28398387</div>
+          <div class="text-[11px] text-stone-600">Merchant / Account: <strong>Moke Furniture</strong></div>
+          <p class="text-[10px] text-sky-900 mt-2 font-medium">⚠️ Please make full transfer, then attach screenshot below before dispatch.</p>
+        </div>
+      </div>
+
+      <!-- Payment Screenshot Upload Box -->
+      <div class="mb-5">
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1.5">Upload Payment Screenshot / Transfer Receipt *</label>
+        
+        <div id="screenshot-dropzone" class="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-2xl p-4 text-center cursor-pointer transition bg-stone-50/60 relative">
+          <input type="file" id="receipt-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="handleReceiptUpload(event)" />
+          
+          <div id="receipt-prompt" class="flex flex-col items-center justify-center py-2">
+            <div class="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 mb-2">
+              <i data-lucide="upload" class="w-5 h-5"></i>
+            </div>
+            <p class="text-xs font-semibold text-stone-800 mb-0.5">Click or tap to upload receipt screenshot</p>
+            <p class="text-[10px] text-stone-500">Supports PNG, JPG, or screenshot from phone gallery</p>
+          </div>
+
+          <!-- Preview when selected -->
+          <div id="receipt-preview-container" class="hidden flex items-center gap-3 text-left">
+            <img id="receipt-preview-img" src="" alt="Payment Receipt" class="w-16 h-16 object-cover rounded-xl border border-stone-300 shrink-0" />
+            <div class="flex-grow overflow-hidden">
+              <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                <i data-lucide="check-circle" class="w-3 h-3"></i> Screenshot Ready
+              </span>
+              <p id="receipt-file-name" class="text-xs font-medium text-stone-900 truncate">screenshot.jpg</p>
+              <button type="button" onclick="removeReceipt(event)" class="text-[10px] text-red-600 hover:underline mt-0.5 block">Remove or replace</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Form Fields -->
+      <form id="checkout-form" class="space-y-3.5">
+      <!-- Customer Form Fields -->
+      <form id="checkout-form" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Your Full Name *</label>
+          <input type="text" id="cust-name" required placeholder="e.g. Alex Morgan" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Phone Number *</label>
+          <input type="tel" id="cust-phone" required placeholder="e.g. 0911234567" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Delivery Address & City *</label>
+          <textarea id="cust-address" required rows="2" placeholder="e.g. Bole Medhanialem, Atlas area, House #402, Addis Ababa" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Delivery Notes (Optional)</label>
+          <input type="text" id="cust-notes" placeholder="e.g. 2nd floor, call before arriving" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+        </div>
+
+        <button type="submit" class="w-full py-4 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-4">
+          <i data-lucide="send" class="w-4 h-4"></i> Send Order & Screenshot to @N8bee
+        </button>
+      </form>
+      
+      <p class="text-[10px] text-center text-stone-400 mt-3 flex items-center justify-center gap-1.5">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i> Direct verification with Moke Furniture Studio
+      </p>
+    </div>
+  </div>
+
+  <div 
+    id="toast" 
+    class="fixed bottom-6 right-6 z-50 bg-stone-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-medium tracking-wide flex items-center gap-2 transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-none border border-stone-700">
+    Notification text
+  </div>
+
+  <!-- Scripts -->
+  <script src="data/products.js"></script>
+  <script src="data/db.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    function toggleMobileMenu() {
+      if (mobileMenu) {
+        mobileMenu.classList.toggle('hidden');
+      }
+    }
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    }
+  </script>
+</body>
+</html>

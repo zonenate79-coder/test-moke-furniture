@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOKE Product Studio | Catalog & 3D Manager</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google 3D & AR Model Viewer -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+  <style>
+    .dropzone-active {
+      border-color: #1c1917 !important;
+      background-color: #f5f5f4 !important;
+      transform: scale(1.01);
+    }
+  </style>
+</head>
+<body class="bg-stone-100 text-stone-900 font-sans min-h-screen">
+
+  <!-- ========================================================================= -->
+  <!-- ADMIN SECURITY GATE (Username: admin | Password: 12345678)                -->
+  <!-- ========================================================================= -->
+  <div id="admin-login-overlay" class="fixed inset-0 z-50 bg-stone-900 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-stone-200 text-center relative animate-in fade-in zoom-in duration-300">
+      <div class="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4 text-stone-900 border border-stone-200">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+
+      <div class="font-serif text-2xl tracking-[0.2em] font-normal uppercase text-stone-900 mb-1">
+        MOKE
+      </div>
+      <span class="text-[9px] uppercase tracking-[0.3em] text-stone-400 block mb-6 font-sans font-semibold">
+        STUDIO ADMIN ACCESS
+      </span>
+
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4 text-left">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Username</label>
+          <input 
+            type="text" 
+            id="admin-username" 
+            required 
+            autocomplete="username"
+            placeholder="admin" 
+            class="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-stone-900" 
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Password</label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="admin-password" 
+              required 
+              autocomplete="current-password"
+              placeholder="••••••••" 
+              class="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 pr-10" 
+            />
+            <button 
+              type="button" 
+              onclick="togglePasswordVisibility()" 
+              class="absolute right-3 top-2.5 text-stone-400 hover:text-stone-700" 
+              aria-label="Toggle password visibility">
+              <i id="pwd-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="admin-login-error" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center gap-1.5 font-medium">
+          <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+          <span>Incorrect username or password.</span>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-2">
+          <i data-lucide="unlock" class="w-4 h-4"></i> Unlock Studio
+        </button>
+      </form>
+
+      <a href="index.html" class="inline-block mt-5 text-[11px] text-stone-400 hover:text-stone-700 transition">
+        ← Return to Customer Storefront
+      </a>
+    </div>
+  </div>
+
+  <div id="studio-wrapper" class="hidden">
+  <!-- Studio Header -->
+  <header class="bg-white border-b border-stone-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl transition flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider shadow">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> View Live Store
+        </a>
+        <div class="h-6 w-px bg-stone-200"></div>
+        <div>
+          <span class="font-serif text-xl tracking-widest font-normal uppercase text-stone-900">MOKE</span>
+          <span class="text-[10px] font-sans uppercase tracking-widest bg-stone-900 text-white px-2 py-0.5 rounded ml-1.5">Studio</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span id="product-stats" class="text-xs text-stone-500 font-mono bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-200">
+          Loading...
+        </span>
+        <button onclick="openDatabaseModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i> Orders DB (<span id="db-orders-badge">0</span>)
+        </button>
+        <button onclick="exportProductsJS()" class="px-3.5 py-2 bg-white border border-stone-300 hover:bg-stone-50 rounded-xl text-xs font-medium text-stone-700 transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Export JS
+        </button>
+        <button onclick="resetFactory()" class="px-3 py-2 text-stone-500 hover:text-red-700 text-xs font-medium transition" title="Reset to original 30 pieces">
+          Reset Default
+        </button>
+        <button onclick="lockStudio()" class="px-3 py-2 text-stone-500 hover:text-stone-900 border border-stone-200 bg-white rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm" title="Lock Studio">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: Product Editor Form (7 cols) -->
+      <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
+        <div class="flex items-center justify-between pb-4 mb-6 border-b border-stone-100">
+          <div>
+            <h2 id="form-heading" class="font-serif text-2xl text-stone-900">Add New Furniture Piece</h2>
+            <p class="text-xs text-stone-500 mt-0.5">Drag & drop your photo and 3D model, set price, and save to your live store.</p>
+          </div>
+          <button id="cancel-edit-btn" onclick="resetForm()" class="hidden px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 rounded-lg text-xs font-medium text-stone-600 transition">
+            Cancel Edit
+          </button>
+        </div>
+
+        <form id="product-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+          <input type="hidden" id="edit-product-id" value="" />
+
+          <!-- Category Selector -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-2">Category *</label>
+            <div class="grid grid-cols-3 gap-2.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="sofas" checked class="peer sr-only" onchange="updateLivePreview()" />
+                <div class="p-3 text-center border-2 border-stone-200 rounded-2xl peer-checked:border-stone-900 peer-checked:bg-stone-900 peer-checked:text-white transition text-xs font-medium">
+                  🛋️ Sofa
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="chairs" class="peer sr-only" onchange="updateLivePreview()" />
+                <div class="p-3 text-center border-2 border-stone-200 rounded-2xl peer-checked:border-stone-900 peer-checked:bg-stone-900 peer-checked:text-white transition text-xs font-medium">
+                  🪑 Chair
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="tables" class="peer sr-only" onchange="updateLivePreview()" />
+                <div class="p-3 text-center border-2 border-stone-200 rounded-2xl peer-checked:border-stone-900 peer-checked:bg-stone-900 peer-checked:text-white transition text-xs font-medium">
+                  🪵 Table
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Title & Tag -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="prod-name" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Piece Name *</label>
+              <input 
+                id="prod-name" 
+                type="text" 
+                required 
+                placeholder="e.g. Kyoto Low Minimalist Sofa" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+            </div>
+            <div>
+              <label for="prod-tag" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Badge Tag</label>
+              <select id="prod-tag" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900" onchange="updateLivePreview()">
+                <option value="Bestseller">Bestseller</option>
+                <option value="Curator's Choice">Curator's Choice</option>
+                <option value="New Arrival">New Arrival</option>
+                <option value="Signature">Signature</option>
+                <option value="Design Award">Design Award</option>
+                <option value="Limited Edition">Limited Edition</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Price & Discount -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="prod-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Price ($ USD) *</label>
+              <input 
+                id="prod-price" 
+                type="number" 
+                required 
+                min="1" 
+                placeholder="1850" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+            </div>
+            <div>
+              <label for="prod-orig-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Original Price ($) (Optional)</label>
+              <input 
+                id="prod-orig-price" 
+                type="number" 
+                min="1" 
+                placeholder="2100 (Shows save %)" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+            </div>
+          </div>
+
+          <!-- PHOTO SECTION WITH DRAG & DROP & CLOUD UPLOAD -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs uppercase tracking-wider font-semibold text-stone-700">
+                Furniture Photo *
+              </label>
+              <span class="text-[10px] text-stone-400">Supports Local <code class="bg-stone-100 px-1 rounded">images/</code> & Free Cloud Upload</span>
+            </div>
+            
+            <!-- Drag & Drop Zone for Photo -->
+            <div 
+              id="photo-dropzone" 
+              class="relative border-2 border-dashed border-stone-300 hover:border-stone-800 rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition bg-stone-50 hover:bg-stone-100 group">
+              <input 
+                type="file" 
+                id="photo-file-input" 
+                accept="image/*" 
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                onchange="handlePhotoFile(this.files[0])" 
+              />
+              <div class="flex flex-col items-center gap-1.5 pointer-events-none">
+                <div class="w-10 h-10 rounded-full bg-stone-200/70 group-hover:bg-stone-900 group-hover:text-white flex items-center justify-center transition text-stone-600">
+                  <i data-lucide="image" class="w-5 h-5"></i>
+                </div>
+                <p class="text-xs font-semibold text-stone-800">Drag & drop your furniture photo here</p>
+                <p class="text-[11px] text-stone-400">or click to browse from computer (JPG, PNG, WEBP)</p>
+                <span id="photo-filename-badge" class="hidden mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm"></span>
+              </div>
+            </div>
+
+            <!-- Image Link & Actions -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2">
+              <input 
+                id="prod-image" 
+                type="text" 
+                placeholder="Image URL (https://...) or local path (images/sofa-1.jpg)" 
+                class="flex-grow px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900 font-mono"
+                oninput="updateLivePreview()"
+              />
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="useImagesFolderPath()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1" title="Use file from moke-furniture/images/ folder">
+                  <i data-lucide="folder" class="w-3.5 h-3.5"></i> images/ Path
+                </button>
+                <button type="button" onclick="insertSamplePhoto()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium whitespace-nowrap transition">
+                  Sample
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D MODEL SECTION WITH DRAG & DROP -->
+          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs uppercase tracking-wider font-bold text-amber-950 flex items-center gap-1.5">
+                <i data-lucide="box" class="w-4 h-4 text-amber-800"></i> Interactive 3D Model (.GLB)
+              </label>
+              <span class="text-[10px] text-amber-900 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">360° Drag & Drop</span>
+            </div>
+
+            <!-- 3D Drag & Drop Zone -->
+            <div 
+              id="model3d-dropzone" 
+              class="relative border-2 border-dashed border-amber-300 hover:border-amber-900 rounded-2xl p-5 text-center cursor-pointer transition bg-white/90 hover:bg-amber-100/40 group">
+              <input 
+                type="file" 
+                id="model3d-file-input" 
+                accept=".glb,.gltf" 
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                onchange="handle3DFile(this.files[0])" 
+              />
+              <div class="flex flex-col items-center gap-1.5 pointer-events-none">
+                <div class="w-10 h-10 rounded-full bg-amber-100 group-hover:bg-amber-900 group-hover:text-white flex items-center justify-center transition text-amber-900">
+                  <i data-lucide="box" class="w-5 h-5"></i>
+                </div>
+                <p class="text-xs font-semibold text-amber-950">Drag & drop your 3D model (.glb file) here</p>
+                <p class="text-[11px] text-amber-800/80">or click to browse from your computer folder</p>
+                <span id="model3d-filename-badge" class="hidden mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm"></span>
+              </div>
+            </div>
+
+            <!-- Paste 3D URL & Sample Buttons -->
+            <div class="flex items-center gap-2">
+              <input 
+                id="prod-3d" 
+                type="text" 
+                placeholder="Or paste .glb link (https://.../model.glb)" 
+                class="w-full px-3 py-2 bg-white border border-amber-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+              <button type="button" onclick="insertSample3D()" class="px-3 py-2 bg-amber-900 text-white rounded-xl text-xs font-medium whitespace-nowrap hover:bg-amber-950 transition shadow-sm">
+                Test Sample Chair
+              </button>
+              <button type="button" onclick="clear3DModel()" class="px-2.5 py-2 text-stone-500 hover:text-red-700 text-xs font-medium transition" title="Remove 3D">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Material & Filter Tag -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="prod-material-tag" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Material Filter Group *</label>
+              <select id="prod-material-tag" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900" onchange="updateLivePreview()">
+                <option value="leather">Leather (Full-Grain / Saddle)</option>
+                <option value="boucle">Bouclé & Wool Weave</option>
+                <option value="wood">Solid Wood (Oak / Walnut / Elm)</option>
+                <option value="linen">Natural Belgian Linen</option>
+                <option value="stone">Stone & Travertine / Marble</option>
+                <option value="velvet">Cotton Ribbed Velvet</option>
+              </select>
+            </div>
+            <div>
+              <label for="prod-material" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Full Material Description</label>
+              <input 
+                id="prod-material" 
+                type="text" 
+                placeholder="e.g. Belgian Flax Linen & Solid White Oak" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+            </div>
+          </div>
+
+          <!-- Dimensions & Specs -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="prod-dimensions" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Dimensions (W × D × H)</label>
+              <input 
+                id="prod-dimensions" 
+                type="text" 
+                placeholder="e.g. 220 × 95 × 78 cm" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"
+                oninput="updateLivePreview()"
+              />
+            </div>
+            <div>
+              <label for="prod-seat" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Seat / Clearance</label>
+              <input 
+                id="prod-seat" 
+                type="text" 
+                placeholder="e.g. 44 cm" 
+                class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"
+              />
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            id="submit-btn" 
+            class="w-full py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-semibold uppercase tracking-widest transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Save Piece to Catalog
+          </button>
+        </form>
+      </div>
+
+      <!-- RIGHT COLUMN: Real-Time Live Preview (5 cols) -->
+      <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+        <div class="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
+            <h3 class="font-serif text-lg text-stone-900">Live Card Preview</h3>
+            <span class="text-[10px] font-mono uppercase bg-stone-100 text-stone-600 px-2 py-0.5 rounded">Store Appearance</span>
+          </div>
+
+          <!-- Preview Container -->
+          <div id="preview-card-slot">
+            <!-- Rendered by builder logic -->
+          </div>
+        </div>
+
+        <!-- 3D Interactive Model Preview Box -->
+        <div id="preview-3d-box" class="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hidden">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-stone-100">
+            <h3 class="font-serif text-lg text-stone-900 flex items-center gap-1.5">
+              <i data-lucide="box" class="w-4 h-4 text-amber-700"></i> 3D Rotation Test
+            </h3>
+            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Grab & Spin Active</span>
+          </div>
+          <div id="preview-3d-slot" class="w-full aspect-square rounded-2xl bg-stone-100 overflow-hidden border border-stone-200">
+            <!-- Injected model-viewer -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM SECTION: Product Catalog Manager -->
+    <section class="mt-12 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-100">
+        <div>
+          <h2 class="font-serif text-2xl text-stone-900">Catalog Inventory</h2>
+          <p class="text-xs text-stone-500">Edit, modify prices, or delete any piece currently in your store.</p>
+        </div>
+
+        <!-- Filter tabs for inventory -->
+        <div class="flex items-center gap-1.5 bg-stone-100 p-1.5 rounded-xl text-xs">
+          <button onclick="setManagerFilter('all')" class="manager-tab px-3 py-1.5 rounded-lg font-medium transition bg-stone-900 text-white shadow-sm">All</button>
+          <button onclick="setManagerFilter('sofas')" class="manager-tab px-3 py-1.5 rounded-lg font-medium transition text-stone-600 hover:text-stone-900">Sofas</button>
+          <button onclick="setManagerFilter('chairs')" class="manager-tab px-3 py-1.5 rounded-lg font-medium transition text-stone-600 hover:text-stone-900">Chairs</button>
+          <button onclick="setManagerFilter('tables')" class="manager-tab px-3 py-1.5 rounded-lg font-medium transition text-stone-600 hover:text-stone-900">Tables</button>
+        </div>
+      </div>
+
+      <!-- Inventory Grid -->
+      <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Rendered by builder.js -->
+      </div>
+    </section>
+  </main>
+  </div> <!-- Close #studio-wrapper -->
+
+  <script src="data/products.js"></script>
+  <script>
+    // Admin Security Credentials
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = '12345678';
+
+    function checkAdminAuth() {
+      const isAuth = sessionStorage.getItem('moke_admin_auth') === 'true';
+      const overlay = document.getElementById('admin-login-overlay');
+      const studio = document.getElementById('studio-wrapper');
+
+      if (isAuth) {
+        if (overlay) overlay.classList.add('hidden');
+        if (studio) studio.classList.remove('hidden');
+      } else {
+        if (overlay) overlay.classList.remove('hidden');
+        if (studio) studio.classList.add('hidden');
+      }
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('admin-username')?.value.trim();
+      const p = document.getElementById('admin-password')?.value;
+      const err = document.getElementById('admin-login-error');
+
+      if (u === ADMIN_USER && p === ADMIN_PASS) {
+        sessionStorage.setItem('moke_admin_auth', 'true');
+        if (err) err.classList.add('hidden');
+        checkAdminAuth();
+        if (window.lucide) lucide.createIcons();
+      } else {
+        if (err) err.classList.remove('hidden');
+        const pInput = document.getElementById('admin-password');
+        if (pInput) {
+          pInput.value = '';
+          pInput.focus();
+        }
+      }
+    }
+
+    function lockStudio() {
+      sessionStorage.removeItem('moke_admin_auth');
+      checkAdminAuth();
+      const pInput = document.getElementById('admin-password');
+      if (pInput) pInput.value = '';
+    }
+
+    function togglePasswordVisibility() {
+      const pInput = document.getElementById('admin-password');
+      const eyeIcon = document.getElementById('pwd-eye-icon');
+      if (!pInput) return;
+      if (pInput.type === 'password') {
+        pInput.type = 'text';
+        if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        pInput.type = 'password';
+        if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // State
+    let catalog = [];
+    let currentManagerFilter = 'all';
+
+    function initStudio() {
+      const saved = localStorage.getItem('moke_custom_products');
+      if (saved) {
+        try {
+          catalog = JSON.parse(saved);
+        } catch (e) {
+          catalog = [...productsData];
+        }
+      } else {
+        catalog = [...productsData];
+      }
+
+      setupDragAndDrop();
+      updateStats();
+      renderInventory();
+      updateLivePreview();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Setup Drag and Drop events
+    function setupDragAndDrop() {
+      const photoZone = document.getElementById('photo-dropzone');
+      const modelZone = document.getElementById('model3d-dropzone');
+
+      // Photo dropzone
+      if (photoZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+          photoZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            photoZone.classList.add('dropzone-active');
+          });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+          photoZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            photoZone.classList.remove('dropzone-active');
+          });
+        });
+        photoZone.addEventListener('drop', (e) => {
+          const files = e.dataTransfer.files;
+          if (files && files[0]) {
+            handlePhotoFile(files[0]);
+          }
+        });
+      }
+
+      // 3D Model dropzone
+      if (modelZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+          modelZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            modelZone.classList.add('dropzone-active');
+          });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+          modelZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            modelZone.classList.remove('dropzone-active');
+          });
+        });
+        modelZone.addEventListener('drop', (e) => {
+          const files = e.dataTransfer.files;
+          if (files && files[0]) {
+            handle3DFile(files[0]);
+          }
+        });
+      }
+    }
+
+    let lastDroppedPhoto = null;
+
+    // Handle Dropped Photo File
+    function handlePhotoFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        alert('Please drop an image file (JPG, PNG, WEBP).');
+        return;
+      }
+      lastDroppedPhoto = file;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Immediate local preview
+        document.getElementById('prod-image').value = e.target.result;
+        const badge = document.getElementById('photo-filename-badge');
+        badge.textContent = `✅ Loaded: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+        badge.className = 'mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+        badge.classList.remove('hidden');
+        updateLivePreview();
+
+        // Also offer cloud upload if connected to internet
+        if (navigator.onLine) {
+          uploadPhotoToCloud(file);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadPhotoToCloud(file) {
+      const badge = document.getElementById('photo-filename-badge');
+      badge.textContent = `⏳ Uploading "${file.name}" to cloud for public URL...`;
+      badge.className = 'mt-1 text-[11px] text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // Free Imgbb public upload API
+        const res = await fetch('https://api.imgbb.com/1/upload?key=2d0c2e30fa4fa03a83f1248455fa980f', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data && data.success && data.data && data.data.url) {
+          document.getElementById('prod-image').value = data.data.url;
+          badge.textContent = `🌐 Public Cloud URL Generated: ${file.name}`;
+          badge.className = 'mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+          updateLivePreview();
+          return;
+        }
+      } catch (e) {
+        console.warn('Cloud upload failed, using local/preview mode:', e);
+      }
+
+      badge.textContent = `📁 Local File: ${file.name} (Save in images/ for live hosting)`;
+      badge.className = 'mt-1 text-[11px] text-stone-700 bg-stone-200 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+    }
+
+    function useImagesFolderPath() {
+      const currentVal = document.getElementById('prod-image').value;
+      let filename = 'sofa-custom.jpg';
+      if (lastDroppedPhoto && lastDroppedPhoto.name) {
+        filename = lastDroppedPhoto.name;
+      } else if (currentVal && !currentVal.startsWith('http') && !currentVal.startsWith('data:')) {
+        filename = currentVal.replace(/^images\//, '');
+      } else {
+        const input = prompt('Enter the image filename saved in your moke-furniture/images/ folder:', filename);
+        if (input) filename = input.trim();
+      }
+
+      const localPath = `images/${filename}`;
+      document.getElementById('prod-image').value = localPath;
+      const badge = document.getElementById('photo-filename-badge');
+      badge.textContent = `📁 Using local path: ${localPath}`;
+      badge.className = 'mt-1 text-[11px] text-sky-800 bg-sky-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+      badge.classList.remove('hidden');
+      updateLivePreview();
+    }
+
+    // Handle Dropped 3D GLB File
+    function handle3DFile(file) {
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+        alert('Please drop a 3D model file ending in .glb or .gltf');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('prod-3d').value = e.target.result;
+        const badge = document.getElementById('model3d-filename-badge');
+        badge.textContent = `✅ ${file.name} (${Math.round(file.size / 1024)} KB)`;
+        badge.classList.remove('hidden');
+        updateLivePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clear3DModel() {
+      document.getElementById('prod-3d').value = '';
+      const badge = document.getElementById('model3d-filename-badge');
+      badge.textContent = '';
+      badge.classList.add('hidden');
+      updateLivePreview();
+    }
+
+    function updateStats() {
+      const with3D = catalog.filter(p => p.model3d).length;
+      document.getElementById('product-stats').textContent = `${catalog.length} Pieces | ${with3D} with 3D`;
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('moke_custom_products', JSON.stringify(catalog));
+      updateStats();
+      renderInventory();
+    }
+
+    function resetFactory() {
+      if (confirm('Reset catalog back to the original 30 pieces? Any custom pieces you added will be refreshed.')) {
+        localStorage.removeItem('moke_custom_products');
+        catalog = [...productsData];
+        saveToStorage();
+        resetForm();
+        alert('Catalog reset to default 30 pieces!');
+      }
+    }
+
+    function setManagerFilter(cat) {
+      currentManagerFilter = cat;
+      document.querySelectorAll('.manager-tab').forEach(tab => {
+        tab.classList.remove('bg-stone-900', 'text-white', 'shadow-sm');
+        tab.classList.add('text-stone-600');
+      });
+      event.target.classList.add('bg-stone-900', 'text-white', 'shadow-sm');
+      event.target.classList.remove('text-stone-600');
+      renderInventory();
+    }
+
+    function renderInventory() {
+      const container = document.getElementById('inventory-grid');
+      const filtered = catalog.filter(p => currentManagerFilter === 'all' || p.category === currentManagerFilter);
+
+      container.innerHTML = filtered.map(item => `
+        <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200/80 flex flex-col justify-between gap-3 hover:border-stone-400 transition">
+          <div class="flex gap-3">
+            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover border border-stone-200 shrink-0" />
+            <div class="flex-grow overflow-hidden">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[9px] uppercase tracking-wider font-semibold text-stone-400">${item.category}</span>
+                ${item.model3d ? '<span class="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="box" class="w-2.5 h-2.5"></i> 3D</span>' : ''}
+              </div>
+              <h4 class="font-serif text-sm text-stone-900 line-clamp-1">${item.name}</h4>
+              <span class="text-xs font-semibold text-stone-900">$${item.price.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-stone-200/60 text-xs">
+            <button onclick="editProduct('${item.id}')" class="px-3 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg text-stone-800 font-medium transition flex items-center gap-1 shadow-sm">
+              <i data-lucide="edit-2" class="w-3 h-3"></i> Modify
+            </button>
+            <button onclick="deleteProduct('${item.id}')" class="p-1.5 text-stone-400 hover:text-red-600 transition" title="Delete Piece">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function editProduct(id) {
+      const p = catalog.find(x => x.id === id);
+      if (!p) return;
+
+      document.getElementById('edit-product-id').value = p.id;
+      document.getElementById('form-heading').textContent = `Editing: ${p.name}`;
+      document.getElementById('cancel-edit-btn').classList.remove('hidden');
+      document.getElementById('submit-btn').innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Update Piece in Catalog`;
+
+      // Select category
+      const catRadios = document.getElementsByName('category');
+      catRadios.forEach(r => r.checked = (r.value === p.category));
+
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-tag').value = p.tag || 'Bestseller';
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-orig-price').value = p.originalPrice || '';
+      document.getElementById('prod-material-tag').value = p.filterTag || 'boucle';
+      document.getElementById('prod-material').value = p.material || '';
+      document.getElementById('prod-dimensions').value = p.dimensions || '';
+      document.getElementById('prod-seat').value = p.seatHeight || '';
+      document.getElementById('prod-image').value = p.image || '';
+      document.getElementById('prod-3d').value = p.model3d || '';
+
+      const photoBadge = document.getElementById('photo-filename-badge');
+      photoBadge.textContent = 'Current image loaded';
+      photoBadge.classList.remove('hidden');
+
+      const modelBadge = document.getElementById('model3d-filename-badge');
+      if (p.model3d) {
+        modelBadge.textContent = '3D model attached';
+        modelBadge.classList.remove('hidden');
+      } else {
+        modelBadge.classList.add('hidden');
+      }
+
+      updateLivePreview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('product-form').reset();
+      document.getElementById('edit-product-id').value = '';
+      document.getElementById('form-heading').textContent = 'Add New Furniture Piece';
+      document.getElementById('cancel-edit-btn').classList.add('hidden');
+      document.getElementById('submit-btn').innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i> Save Piece to Catalog`;
+      document.getElementById('photo-filename-badge').classList.add('hidden');
+      document.getElementById('model3d-filename-badge').classList.add('hidden');
+      updateLivePreview();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function deleteProduct(id) {
+      const p = catalog.find(x => x.id === id);
+      if (!p) return;
+      if (confirm(`Are you sure you want to delete "${p.name}"?`)) {
+        catalog = catalog.filter(x => x.id !== id);
+        saveToStorage();
+        if (document.getElementById('edit-product-id').value === id) {
+          resetForm();
+        }
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById('edit-product-id').value;
+      const category = document.querySelector('input[name="category"]:checked').value;
+      const name = document.getElementById('prod-name').value.trim();
+      const tag = document.getElementById('prod-tag').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const origPriceVal = document.getElementById('prod-orig-price').value;
+      const originalPrice = origPriceVal ? parseFloat(origPriceVal) : null;
+      const filterTag = document.getElementById('prod-material-tag').value;
+      const material = document.getElementById('prod-material').value.trim() || 'Solid Timber & Fabric';
+      const dimensions = document.getElementById('prod-dimensions').value.trim() || 'Custom Dimensions';
+      const seatHeight = document.getElementById('prod-seat').value.trim() || 'Standard';
+      const image = document.getElementById('prod-image').value.trim();
+      const model3d = document.getElementById('prod-3d').value.trim() || null;
+
+      if (!image) {
+        alert('Please drop a photo or paste an image URL.');
+        return;
+      }
+
+      if (editId) {
+        // Update existing piece
+        const idx = catalog.findIndex(x => x.id === editId);
+        if (idx !== -1) {
+          catalog[idx] = {
+            ...catalog[idx],
+            category,
+            name,
+            tag,
+            price,
+            originalPrice,
+            filterTag,
+            material,
+            dimensions,
+            seatHeight,
+            image,
+            model3d
+          };
+        }
+      } else {
+        // Create new piece
+        const newPiece = {
+          id: `${category}-${Date.now()}`,
+          name,
+          category,
+          tag,
+          price,
+          originalPrice,
+          rating: 5.0,
+          reviewsCount: 1,
+          material,
+          filterTag,
+          dimensions,
+          seatHeight,
+          weight: '35 kg',
+          colors: ['#D4B996', '#262626'],
+          colorNames: ['Natural', 'Charcoal'],
+          image,
+          model3d,
+          description: `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
+        };
+        catalog.unshift(newPiece);
+      }
+
+      saveToStorage();
+      resetForm();
+      alert(`Saved! "${name}" ($${price}) is now live on your store.`);
+    }
+
+    function updateLivePreview() {
+      const name = document.getElementById('prod-name').value || 'Moke Signature Piece';
+      const price = parseFloat(document.getElementById('prod-price').value) || 1850;
+      const origPrice = parseFloat(document.getElementById('prod-orig-price').value) || null;
+      const tag = document.getElementById('prod-tag').value || 'Bestseller';
+      const image = document.getElementById('prod-image').value || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
+      const model3d = document.getElementById('prod-3d').value.trim();
+      const category = document.querySelector('input[name="category"]:checked')?.value || 'sofas';
+      const material = document.getElementById('prod-material').value || 'Textured Bouclé & White Oak';
+
+      const discount = origPrice && origPrice > price ? Math.round(((origPrice - price) / origPrice) * 100) : null;
+
+      document.getElementById('preview-card-slot').innerHTML = `
+        <div class="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm max-w-sm mx-auto">
+          <div class="relative w-full aspect-[4/3] bg-stone-100 overflow-hidden">
+            <img src="${image}" alt="${name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'" />
+            <div class="absolute top-3 left-3 flex flex-col gap-1">
+              <span class="px-2.5 py-1 text-[10px] font-semibold uppercase bg-white/95 rounded-full shadow-sm text-stone-900">${tag}</span>
+              ${discount ? `<span class="px-2 py-0.5 text-[9px] font-bold uppercase bg-amber-800 text-white rounded-full">Save ${discount}%</span>` : ''}
+            </div>
+            ${model3d ? `
+              <span class="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold uppercase bg-stone-900 text-white rounded-full flex items-center gap-1 shadow">
+                <i data-lucide="box" class="w-3 h-3 text-amber-300"></i> 3D
+              </span>
+            ` : ''}
+          </div>
+          <div class="p-4">
+            <span class="text-[10px] uppercase font-semibold text-stone-400 block mb-0.5">${category}</span>
+            <h4 class="font-serif text-base text-stone-900 mb-1">${name}</h4>
+            <p class="text-xs text-stone-500 mb-2">${material}</p>
+            <div class="pt-2 border-t border-stone-100 flex items-center justify-between">
+              <span class="font-semibold text-stone-900 text-sm">$${price.toLocaleString()}</span>
+              ${origPrice ? `<span class="text-xs text-stone-400 line-through">$${origPrice.toLocaleString()}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 3D Preview Box
+      const box3D = document.getElementById('preview-3d-box');
+      const slot3D = document.getElementById('preview-3d-slot');
+      if (model3d) {
+        box3D.classList.remove('hidden');
+        slot3D.innerHTML = `
+          <model-viewer 
+            src="${model3d}" 
+            alt="3D Preview" 
+            auto-rotate 
+            camera-controls 
+            shadow-intensity="1.2" 
+            class="w-full h-full min-h-[280px]">
+          </model-viewer>
+        `;
+      } else {
+        box3D.classList.add('hidden');
+        slot3D.innerHTML = '';
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function insertSamplePhoto() {
+      const samples = [
+        "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=800&q=80"
+      ];
+      document.getElementById('prod-image').value = samples[Math.floor(Math.random() * samples.length)];
+      updateLivePreview();
+    }
+
+    function insertSample3D() {
+      document.getElementById('prod-3d').value = "https://modelviewer.dev/shared-assets/models/SheenChair.glb";
+      updateLivePreview();
+    }
+
+    function exportProductsJS() {
+      const content = `const productsData = ${JSON.stringify(catalog, null, 2)};\n`;
+      const blob = new Blob([content], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'products.js';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // =========================================================================
+    // DATABASE VIEWER (MokeDB)
+    // =========================================================================
+    function updateDatabaseStats() {
+      if (!window.MokeDB) return;
+      const orders = MokeDB.getOrders();
+      const badge = document.getElementById('db-orders-badge');
+      if (badge) badge.textContent = orders.length;
+    }
+
+    function openDatabaseModal() {
+      const modal = document.getElementById('database-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderDatabaseView();
+      }
+    }
+
+    function closeDatabaseModal() {
+      const modal = document.getElementById('database-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderDatabaseView() {
+      if (!window.MokeDB) return;
+      const users = MokeDB.getUsers();
+      const orders = MokeDB.getOrders();
+
+      const userCountEl = document.getElementById('db-stat-users');
+      const orderCountEl = document.getElementById('db-stat-orders');
+      const totalRevenueEl = document.getElementById('db-stat-revenue');
+      const tableBody = document.getElementById('db-orders-table-body');
+
+      if (userCountEl) userCountEl.textContent = users.length;
+      if (orderCountEl) orderCountEl.textContent = orders.length;
+      
+      const totalRev = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+      if (totalRevenueEl) totalRevenueEl.textContent = `$${totalRev.toLocaleString()}`;
+
+      if (tableBody) {
+        if (orders.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" class="text-center py-8 text-stone-400 text-xs">
+                No customer orders recorded yet. When orders are placed on index.html, they will appear here.
+              </td>
+            </tr>
+          `;
+        } else {
+          tableBody.innerHTML = orders.map(order => `
+            <tr class="hover:bg-stone-50 transition border-b border-stone-200">
+              <td class="px-4 py-3 font-mono font-bold text-stone-900">${order.orderNumber}</td>
+              <td class="px-4 py-3">
+                <span class="font-semibold block text-stone-900">${order.customerName}</span>
+                <span class="text-stone-400 text-[11px]">${order.customerEmail || 'No email'}</span>
+              </td>
+              <td class="px-4 py-3 text-stone-700">${order.customerPhone}</td>
+              <td class="px-4 py-3 max-w-xs truncate text-stone-600" title="${order.deliveryAddress}">
+                ${order.deliveryAddress}
+              </td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.paymentMethod.includes('CBE') ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900'}">
+                  ${order.paymentMethod}
+                </span>
+              </td>
+              <td class="px-4 py-3 font-bold text-stone-900">$${(order.subtotal || 0).toLocaleString()}</td>
+              <td class="px-4 py-3 text-right">
+                <button onclick="deleteDatabaseOrder('${order.id}')" class="text-stone-400 hover:text-red-600 transition p-1" title="Delete record">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function deleteDatabaseOrder(id) {
+      if (confirm('Delete this order record from the database?')) {
+        MokeDB.deleteOrder(id);
+        renderDatabaseView();
+        updateDatabaseStats();
+      }
+    }
+
+    function exportDatabaseJSON() {
+      if (!window.MokeDB) return;
+      const json = MokeDB.exportDatabase();
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `moke_database_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAdminAuth();
+      initStudio();
+      updateDatabaseStats();
+    });
+  </script>
+
+  <!-- DATABASE MODAL VIEWER -->
+  <div id="database-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6">
+    <div class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onclick="closeDatabaseModal()"></div>
+    <div class="relative bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-6">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <i data-lucide="database" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-serif text-2xl text-stone-900">Moke Orders & Customer Database</h3>
+            <span class="text-xs text-stone-500">Live Client-Side Database Engine</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportDatabaseJSON()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Database Backup (.json)
+          </button>
+          <button onclick="closeDatabaseModal()" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Registered Profiles</span>
+          <span id="db-stat-users" class="text-2xl font-serif text-stone-900 font-bold">0</span>
+        </div>
+        <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Total Orders Placed</span>
+          <span id="db-stat-orders" class="text-2xl font-serif text-stone-900 font-bold">0</span>
+        </div>
+        <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Gross Order Revenue</span>
+          <span id="db-stat-revenue" class="text-2xl font-serif text-emerald-700 font-bold">$0</span>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="overflow-x-auto rounded-2xl border border-stone-200">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-stone-100 text-stone-600 uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="px-4 py-3">Order #</th>
+              <th class="px-4 py-3">Customer & Gmail</th>
+              <th class="px-4 py-3">Phone</th>
+              <th class="px-4 py-3">Delivery Address</th>
+              <th class="px-4 py-3">Method</th>
+              <th class="px-4 py-3">Total</th>
+              <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="db-orders-table-body" class="divide-y divide-stone-200 bg-white">
+            <!-- Injected dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="data/db.js"></script>
+</body>
+</html>
