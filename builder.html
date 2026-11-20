@@ -533,6 +533,18 @@
       renderInventory();
       updateLivePreview();
       if (window.lucide) lucide.createIcons();
+
+      // Cloud live sync across PC and Phone
+      if (window.MokeCloud && typeof MokeCloud.onProductsSync === 'function') {
+        MokeCloud.onProductsSync((cloudProducts) => {
+          if (cloudProducts && cloudProducts.length > 0) {
+            catalog = cloudProducts;
+            updateStats();
+            renderInventory();
+            updateLivePreview();
+          }
+        });
+      }
     }
 
     // Setup Drag and Drop events
@@ -814,6 +826,9 @@
       if (confirm(`Are you sure you want to delete "${p.name}"?`)) {
         catalog = catalog.filter(x => x.id !== id);
         saveToStorage();
+        if (window.MokeCloud && typeof MokeCloud.deleteProduct === 'function') {
+          MokeCloud.deleteProduct(id);
+        }
         if (document.getElementById('edit-product-id').value === id) {
           resetForm();
         }
@@ -842,6 +857,8 @@
         return;
       }
 
+      let pieceToSave = null;
+
       if (editId) {
         // Update existing piece
         const idx = catalog.findIndex(x => x.id === editId);
@@ -860,6 +877,7 @@
             image,
             model3d
           };
+          pieceToSave = catalog[idx];
         }
       } else {
         // Create new piece
@@ -884,11 +902,18 @@
           description: `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
         };
         catalog.unshift(newPiece);
+        pieceToSave = newPiece;
       }
 
       saveToStorage();
+
+      // Sync to Firebase Cloud
+      if (pieceToSave && window.MokeCloud && typeof MokeCloud.saveProduct === 'function') {
+        MokeCloud.saveProduct(pieceToSave);
+      }
+
       resetForm();
-      alert(`Saved! "${name}" ($${price}) is now live on your store.`);
+      alert(`Saved! "${name}" ($${price}) is now synced to the Cloud and live on your store.`);
     }
 
     function updateLivePreview() {
@@ -1148,6 +1173,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Firebase Cloud SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="data/firebase-sync.js"></script>
 
   <script src="data/db.js"></script>
 </body>

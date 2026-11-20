@@ -75,6 +75,17 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   setupEventListeners();
   setupIcons();
+
+  // Real-time Cloud Firebase synchronization (Cross-device PC & Phone)
+  if (window.MokeCloud && typeof MokeCloud.onProductsSync === 'function') {
+    MokeCloud.onProductsSync((cloudProducts) => {
+      if (cloudProducts && cloudProducts.length > 0) {
+        activeProducts = cloudProducts;
+        renderAllSections();
+        console.log('⚡ Live Cloud Sync: updated products from Firebase');
+      }
+    });
+  }
 });
 
 // Real-time synchronization when builder modifies products
