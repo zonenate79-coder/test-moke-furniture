@@ -777,7 +777,11 @@
 
         for (const item of candidates) {
           try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`, {
+            const endpoint = key.startsWith('AQ.')
+              ? `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent`
+              : `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`;
+
+            const res = await fetch(endpoint, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
@@ -892,7 +896,11 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
 
       for (const item of modelsToTry) {
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`, {
+          const endpoint = key.startsWith('AQ.')
+            ? `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent`
+            : `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`;
+
+          const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
