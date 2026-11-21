@@ -128,6 +128,9 @@
         <span id="product-stats" class="text-xs text-stone-500 font-mono bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-200">
           Loading...
         </span>
+        <button onclick="openAISettingsModal()" id="ai-header-btn" class="px-3.5 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span id="ai-header-btn-text">✨ AI Setup</span>
+        </button>
         <button onclick="openDatabaseModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
           <i data-lucide="database" class="w-3.5 h-3.5"></i> Orders DB (<span id="db-orders-badge">0</span>)
         </button>
@@ -268,6 +271,18 @@
                 <p class="text-[11px] text-stone-400">or click to browse from computer (JPG, PNG, WEBP)</p>
                 <span id="photo-filename-badge" class="hidden mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm"></span>
               </div>
+            </div>
+
+            <!-- AI Auto-Detect Feedback Bar -->
+            <div id="ai-detect-status" class="hidden mt-2 p-3 rounded-xl border transition-all text-xs flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-2">
+                <span id="ai-spinner" class="animate-spin text-amber-600 hidden">✦</span>
+                <span id="ai-status-icon">✨</span>
+                <span id="ai-status-text" class="font-medium text-stone-800">AI is analyzing photo...</span>
+              </div>
+              <button type="button" onclick="triggerManualAI()" id="ai-retry-btn" class="hidden text-[11px] underline font-semibold text-amber-900 hover:text-amber-950">
+                Re-analyze
+              </button>
             </div>
 
             <!-- Image Link & Actions -->
@@ -538,6 +553,7 @@
       updateStats();
       renderInventory();
       updateLivePreview();
+      updateAIUI();
       if (window.lucide) lucide.createIcons();
 
       // Cloud live sync across PC and Phone
@@ -603,6 +619,269 @@
       }
     }
 
+    // ==========================================
+    // GEMINI AI AUTO-DETECTION ENGINE
+    // ==========================================
+    let currentAIData = null;
+
+    function getAIKey() {
+      return localStorage.getItem('moke_gemini_api_key') || '';
+    }
+
+    function updateAIUI() {
+      const key = getAIKey();
+      const headerBtn = document.getElementById('ai-header-btn');
+      const headerText = document.getElementById('ai-header-btn-text');
+      const modalStatus = document.getElementById('ai-modal-status-badge');
+      const input = document.getElementById('gemini-api-key-input');
+
+      if (input && key) {
+        input.value = key;
+      }
+
+      if (key) {
+        if (headerBtn) {
+          headerBtn.className = 'px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow';
+        }
+        if (headerText) headerText.innerHTML = '✨ AI Active';
+        if (modalStatus) modalStatus.innerHTML = '<span class="text-emerald-700 font-medium">✅ Key is saved and active! Ready to auto-detect.</span>';
+      } else {
+        if (headerBtn) {
+          headerBtn.className = 'px-3.5 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow';
+        }
+        if (headerText) headerText.innerHTML = '✨ AI Setup';
+        if (modalStatus) modalStatus.innerHTML = '<span class="text-amber-800">⚠️ No key saved yet. Paste your Gemini key above.</span>';
+      }
+    }
+
+    function openAISettingsModal() {
+      updateAIUI();
+      const modal = document.getElementById('ai-modal');
+      if (modal) modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeAISettingsModal() {
+      const modal = document.getElementById('ai-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function toggleAIKeyVisibility() {
+      const input = document.getElementById('gemini-api-key-input');
+      const icon = document.getElementById('ai-key-eye-icon');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        if (icon) icon.setAttribute('data-lucide', 'eye');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function saveAIKey() {
+      const input = document.getElementById('gemini-api-key-input');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        alert('Please paste a valid Gemini API key.');
+        return;
+      }
+      localStorage.setItem('moke_gemini_api_key', val);
+      updateAIUI();
+      alert('✨ Gemini AI key saved successfully! Now whenever you drop a photo, details will auto-fill.');
+      closeAISettingsModal();
+    }
+
+    function clearAIKey() {
+      if (confirm('Remove saved Gemini API key?')) {
+        localStorage.removeItem('moke_gemini_api_key');
+        const input = document.getElementById('gemini-api-key-input');
+        if (input) input.value = '';
+        updateAIUI();
+      }
+    }
+
+    async function testAIKeyConnection() {
+      const key = (document.getElementById('gemini-api-key-input')?.value || getAIKey()).trim();
+      if (!key) {
+        alert('Please paste your key first.');
+        return;
+      }
+      const testBtn = document.getElementById('ai-test-btn');
+      if (testBtn) testBtn.textContent = 'Testing...';
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: 'Respond with {"status": "ok"}' }] }]
+          })
+        });
+        const data = await res.json();
+        if (data && data.candidates && data.candidates[0]) {
+          alert('✅ Success! Your Gemini API key is working perfectly.');
+          localStorage.setItem('moke_gemini_api_key', key);
+          updateAIUI();
+        } else if (data.error) {
+          alert('❌ Connection failed: ' + (data.error.message || JSON.stringify(data.error)));
+        } else {
+          alert('Received response: ' + JSON.stringify(data));
+        }
+      } catch (e) {
+        alert('Error connecting to Gemini API: ' + e.message);
+      } finally {
+        if (testBtn) testBtn.textContent = 'Test Key';
+      }
+    }
+
+    async function analyzePhotoWithAI(base64Data, mimeType, fileName) {
+      const key = getAIKey();
+      const statusBox = document.getElementById('ai-detect-status');
+      const statusText = document.getElementById('ai-status-text');
+      const spinner = document.getElementById('ai-spinner');
+      const retryBtn = document.getElementById('ai-retry-btn');
+
+      if (!statusBox || !statusText) return;
+
+      if (!key) {
+        statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-200 bg-amber-50 text-xs flex items-center justify-between shadow-sm';
+        statusText.innerHTML = `<span>💡 <strong class="text-amber-950">AI Auto-Detect:</strong> Add your free Google AI Key to auto-fill title, materials & colors! <button type="button" onclick="openAISettingsModal()" class="underline font-bold text-amber-900 ml-1">Setup Key</button></span>`;
+        if (spinner) spinner.classList.add('hidden');
+        if (retryBtn) retryBtn.classList.add('hidden');
+        statusBox.classList.remove('hidden');
+        return;
+      }
+
+      statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 text-xs flex items-center justify-between shadow-sm animate-pulse';
+      statusText.innerHTML = `<span class="text-amber-950 font-medium">✨ <strong>Gemini Vision:</strong> Analyzing photo (detecting architectural name, finish, upholstery & swatches)...</span>`;
+      if (spinner) spinner.classList.remove('hidden');
+      if (retryBtn) retryBtn.classList.add('hidden');
+      statusBox.classList.remove('hidden');
+
+      const promptText = `You are a world-class luxury minimalist furniture designer for MOKE Furniture (similar to Herman Miller, Restoration Hardware, and Japandi minimalism).
+Analyze this furniture photo in detail and return ONLY a valid JSON object (no markdown code blocks, no backticks, no other text) with these exact keys:
+{
+  "name": "An elegant, architectural furniture title (e.g. 'Kyoto Minimalist Armchair', 'Oslo Curved Bouclé Lounge', 'Kanso Low Oak Dining Table')",
+  "category": "sofas" or "chairs" or "tables",
+  "tag": "Bestseller" or "Curator's Choice" or "New Arrival" or "Signature" or "Limited Edition",
+  "price": suggested luxury retail price as a number (e.g. 1450),
+  "originalPrice": higher MSRP value as a number (e.g. 1750),
+  "finish": "Wood, stone, or metal frame material and finish (e.g. 'Natural White Oak', 'Smoked Walnut', 'Black Ebonized Ash', 'Brushed Brass', 'Honed Travertine')",
+  "upholstery": "Cushion or wrap fabric (e.g. 'Warm Ivory Textured Bouclé', 'Oatmeal Belgian Linen', 'Cognac Top-Grain Leather', or 'None / Solid Timber')",
+  "filterTag": "best matching single tag: 'boucle', 'wood', 'leather', 'linen', 'stone', or 'velvet'",
+  "dimensions": "Realistic luxury furniture dimensions W x D x H (e.g. '88 x 84 x 76 cm')",
+  "seatHeight": "Realistic seat height (e.g. '42 cm') or 'Standard'",
+  "colors": ["#HEX1", "#HEX2"],
+  "colorNames": ["Color 1 Name (e.g. Warm Ivory)", "Color 2 Name (e.g. Natural Oak)"],
+  "description": "A refined, poetic 2-sentence design description celebrating the architectural form, sustainable joinery, and comfort."
+}`;
+
+      const payload = {
+        contents: [
+          {
+            parts: [
+              { text: promptText },
+              {
+                inline_data: {
+                  mime_type: mimeType || 'image/jpeg',
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        }
+      };
+
+      const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+      let result = null;
+
+      for (const model of modelsToTry) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
+            result = data.candidates[0].content.parts[0].text;
+            break;
+          }
+        } catch (err) {
+          console.warn(`Model ${model} attempt failed:`, err);
+        }
+      }
+
+      if (spinner) spinner.classList.add('hidden');
+      statusBox.classList.remove('animate-pulse');
+
+      if (!result) {
+        statusBox.className = 'mt-2 p-3 rounded-xl border border-red-200 bg-red-50 text-xs flex items-center justify-between shadow-sm';
+        statusText.innerHTML = `<span class="text-red-800">⚠️ Could not auto-detect photo details. Check your API key.</span>`;
+        if (retryBtn) retryBtn.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        let cleanStr = result.trim();
+        if (cleanStr.startsWith('```json')) cleanStr = cleanStr.replace(/```json/i, '');
+        if (cleanStr.startsWith('```')) cleanStr = cleanStr.replace(/```/g, '');
+        cleanStr = cleanStr.trim();
+        const parsed = JSON.parse(cleanStr);
+        currentAIData = parsed;
+
+        if (parsed.name) document.getElementById('prod-name').value = parsed.name;
+        if (parsed.category) {
+          const radio = document.querySelector(`input[name="category"][value="${parsed.category}"]`);
+          if (radio) radio.checked = true;
+        }
+        if (parsed.tag) document.getElementById('prod-tag').value = parsed.tag;
+        if (parsed.price && !document.getElementById('prod-price').value) {
+          document.getElementById('prod-price').value = parsed.price;
+        }
+        if (parsed.originalPrice && !document.getElementById('prod-orig-price').value) {
+          document.getElementById('prod-orig-price').value = parsed.originalPrice;
+        }
+        if (parsed.filterTag) document.getElementById('prod-material-tag').value = parsed.filterTag;
+
+        const materialSummary = [parsed.upholstery, parsed.finish].filter(Boolean).join(' & ');
+        if (materialSummary) {
+          document.getElementById('prod-material').value = materialSummary;
+        }
+        if (parsed.dimensions) document.getElementById('prod-dimensions').value = parsed.dimensions;
+        if (parsed.seatHeight) document.getElementById('prod-seat').value = parsed.seatHeight;
+
+        updateLivePreview();
+
+        statusBox.className = 'mt-2 p-3 rounded-xl border border-emerald-300 bg-emerald-50 text-xs flex items-center justify-between shadow-sm';
+        statusText.innerHTML = `<span class="text-emerald-900">✨ <strong>AI Auto-Filled:</strong> "${parsed.name}" • <em>${parsed.upholstery || 'Upholstery'}</em> & <em>${parsed.finish || 'Finish'}</em></span>`;
+        if (retryBtn) retryBtn.classList.remove('hidden');
+      } catch (parseErr) {
+        console.error('Error parsing AI response:', parseErr, result);
+        statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-200 bg-amber-50 text-xs flex items-center justify-between shadow-sm';
+        statusText.innerHTML = `<span class="text-amber-900">AI analyzed photo but returned custom formatting. Form updated.</span>`;
+      }
+    }
+
+    function triggerManualAI() {
+      if (lastDroppedPhoto) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64Data = e.target.result.split(',')[1];
+          analyzePhotoWithAI(base64Data, lastDroppedPhoto.type, lastDroppedPhoto.name);
+        };
+        reader.readAsDataURL(lastDroppedPhoto);
+      } else {
+        alert('Please drop or select a photo first.');
+      }
+    }
+
     let lastDroppedPhoto = null;
 
     // Handle Dropped Photo File
@@ -623,6 +902,12 @@
         badge.className = 'mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
         badge.classList.remove('hidden');
         updateLivePreview();
+
+        // Trigger AI Auto-Detection
+        const base64Data = e.target.result.split(',')[1];
+        if (base64Data) {
+          analyzePhotoWithAI(base64Data, file.type, file.name);
+        }
 
         // Also offer cloud upload if connected to internet
         if (navigator.onLine) {
@@ -815,6 +1100,10 @@
     }
 
     function resetForm() {
+      currentAIData = null;
+      const aiStatus = document.getElementById('ai-detect-status');
+      if (aiStatus) aiStatus.classList.add('hidden');
+
       document.getElementById('product-form').reset();
       document.getElementById('edit-product-id').value = '';
       document.getElementById('form-heading').textContent = 'Add New Furniture Piece';
@@ -883,6 +1172,11 @@
             image,
             model3d
           };
+          if (currentAIData) {
+            if (currentAIData.colors) catalog[idx].colors = currentAIData.colors;
+            if (currentAIData.colorNames) catalog[idx].colorNames = currentAIData.colorNames;
+            if (currentAIData.description) catalog[idx].description = currentAIData.description;
+          }
           pieceToSave = catalog[idx];
         }
       } else {
@@ -901,11 +1195,11 @@
           dimensions,
           seatHeight,
           weight: '35 kg',
-          colors: ['#D4B996', '#262626'],
-          colorNames: ['Natural', 'Charcoal'],
+          colors: (currentAIData && currentAIData.colors) ? currentAIData.colors : ['#D4B996', '#262626'],
+          colorNames: (currentAIData && currentAIData.colorNames) ? currentAIData.colorNames : ['Natural', 'Charcoal'],
           image,
           model3d,
-          description: `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
+          description: (currentAIData && currentAIData.description) ? currentAIData.description : `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
         };
         catalog.unshift(newPiece);
         pieceToSave = newPiece;
@@ -1176,6 +1470,80 @@
             <!-- Injected dynamically -->
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI SETTINGS MODAL -->
+  <div id="ai-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6">
+    <div class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onclick="closeAISettingsModal()"></div>
+    <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl z-10 border border-stone-200">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-serif text-xl text-stone-900">Google Gemini AI Auto-Detect</h3>
+            <span class="text-xs text-stone-500">Auto-detect name, finish, upholstery & colors</span>
+          </div>
+        </div>
+        <button onclick="closeAISettingsModal()" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+          <div class="font-semibold flex items-center gap-1.5 mb-1 text-amber-950">
+            <span>🛡️ 100% Private & Free</span>
+          </div>
+          Your key stays saved in your computer's browser storage. It is never shared with shoppers or uploaded publicly.
+        </div>
+
+        <div>
+          <label for="gemini-api-key-input" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">
+            Gemini API Key *
+          </label>
+          <div class="relative">
+            <input 
+              id="gemini-api-key-input" 
+              type="password" 
+              placeholder="Paste AI key here (e.g. AQ.Ab8RN6... or AIzaSy...)" 
+              class="w-full pl-4 pr-10 py-3 bg-stone-50 border border-stone-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <button 
+              type="button" 
+              onclick="toggleAIKeyVisibility()" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1">
+              <i id="ai-key-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <span id="ai-modal-status-badge" class="mt-2 text-[11px] block text-stone-500">Checking key status...</span>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button 
+            type="button" 
+            onclick="saveAIKey()" 
+            class="flex-1 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition shadow-md flex items-center justify-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i> Save & Activate
+          </button>
+          <button 
+            type="button" 
+            onclick="testAIKeyConnection()" 
+            id="ai-test-btn" 
+            class="px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium transition">
+            Test Key
+          </button>
+          <button 
+            type="button" 
+            onclick="clearAIKey()" 
+            class="px-3 py-3 text-stone-400 hover:text-red-700 text-xs font-medium transition" title="Clear key">
+            Remove
+          </button>
+        </div>
       </div>
     </div>
   </div>
