@@ -726,7 +726,9 @@
     async function getWorkingGeminiModel(key) {
       for (const ver of ['v1beta', 'v1']) {
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${key}`);
+          const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(key)}`, {
+            headers: { 'x-goog-api-key': key }
+          });
           const data = await res.json();
           if (data && data.models && Array.isArray(data.models)) {
             const contentModels = data.models.filter(m => 
@@ -745,7 +747,7 @@
           console.warn(`Query ${ver} models error:`, e);
         }
       }
-      return { model: 'gemini-1.5-flash-latest', version: 'v1beta' };
+      return { model: 'gemini-flash-latest', version: 'v1beta' };
     }
 
     async function testAIKeyConnection() {
@@ -761,19 +763,13 @@
         const modelInfo = await getWorkingGeminiModel(key);
         
         const candidates = [
+          { model: 'gemini-flash-latest', version: 'v1beta' },
           { model: modelInfo.model, version: modelInfo.version },
           { model: 'gemini-2.0-flash-exp', version: 'v1beta' },
           { model: 'gemini-2.0-flash', version: 'v1beta' },
-          { model: 'gemini-2.0-flash-lite', version: 'v1beta' },
           { model: 'gemini-1.5-flash-latest', version: 'v1beta' },
-          { model: 'gemini-1.5-flash-002', version: 'v1beta' },
-          { model: 'gemini-1.5-flash-8b', version: 'v1beta' },
           { model: 'gemini-1.5-flash', version: 'v1beta' },
-          { model: 'gemini-1.5-pro-latest', version: 'v1beta' },
-          { model: 'gemini-1.5-pro-002', version: 'v1beta' },
-          { model: 'gemini-1.5-pro', version: 'v1beta' },
-          { model: 'gemini-1.5-flash', version: 'v1' },
-          { model: 'gemini-1.5-pro', version: 'v1' }
+          { model: 'gemini-pro-latest', version: 'v1beta' }
         ];
 
         let success = false;
@@ -781,9 +777,12 @@
 
         for (const item of candidates) {
           try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${key}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': key
+              },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: 'Respond with {"status": "ok"}' }] }]
               })
@@ -877,31 +876,28 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
         }
       };
 
-      const savedM = localStorage.getItem('moke_gemini_model') || 'gemini-2.0-flash-exp';
+      const savedM = localStorage.getItem('moke_gemini_model') || 'gemini-flash-latest';
       const savedV = localStorage.getItem('moke_gemini_apiversion') || 'v1beta';
 
       const modelsToTry = [
         { model: savedM, version: savedV },
+        { model: 'gemini-flash-latest', version: 'v1beta' },
         { model: 'gemini-2.0-flash-exp', version: 'v1beta' },
         { model: 'gemini-2.0-flash', version: 'v1beta' },
-        { model: 'gemini-2.0-flash-lite', version: 'v1beta' },
         { model: 'gemini-1.5-flash-latest', version: 'v1beta' },
-        { model: 'gemini-1.5-flash-002', version: 'v1beta' },
-        { model: 'gemini-1.5-flash-8b', version: 'v1beta' },
         { model: 'gemini-1.5-flash', version: 'v1beta' },
-        { model: 'gemini-1.5-pro-latest', version: 'v1beta' },
-        { model: 'gemini-1.5-pro-002', version: 'v1beta' },
-        { model: 'gemini-1.5-pro', version: 'v1beta' },
-        { model: 'gemini-1.5-flash', version: 'v1' },
-        { model: 'gemini-1.5-pro', version: 'v1' }
+        { model: 'gemini-pro-latest', version: 'v1beta' }
       ];
       let result = null;
 
       for (const item of modelsToTry) {
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${key}`, {
+          const res = await fetch(`https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-goog-api-key': key
+            },
             body: JSON.stringify(payload)
           });
           const data = await res.json();
