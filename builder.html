@@ -195,17 +195,7 @@
         <span id="product-stats" class="text-xs text-stone-500 font-mono bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-200">
           Loading...
         </span>
-        <button onclick="openDatabaseModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow relative">
-          <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i> Orders (<span id="db-orders-badge">0</span>)
-          <span id="pending-alert-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping"></span>
-        </button>
-        <button onclick="openFeedbackModal()" class="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow relative">
-          💬 Feedback <span id="unread-badge-hdr" class="hidden ml-1 bg-red-500 text-white text-[9px] rounded-full px-1.5 py-0.5">0</span>
-        </button>
-        <button onclick="resetFactory()" class="px-3.5 py-2 bg-white border border-stone-300 hover:bg-stone-50 rounded-xl text-xs font-medium text-stone-700 transition flex items-center gap-1.5 shadow-sm" title="Reset to original 30 pieces">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Reset Default 30
-        </button>
-        <button onclick="lockStudio()" class="px-3 py-2 text-stone-500 hover:text-stone-900 border border-stone-200 bg-white rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm" title="Lock Studio">
+        <button onclick="lockStudio()" class="px-3.5 py-2 text-stone-600 hover:text-stone-900 border border-stone-300 bg-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
         </button>
       </div>
@@ -213,22 +203,24 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- 3 MAIN TABS (Sticky on phone and desktop) -->
+    <!-- 3 SIMPLE TOP TABS (The ONLY 3 options) -->
     <div class="sticky top-20 z-30 mb-8 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-stone-200">
       <div class="grid grid-cols-3 gap-2">
-        <button id="tab-btn-catalog" onclick="switchBuilderTab('catalog')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-900 text-white shadow-sm">
-          <span>📦</span> <span class="hidden sm:inline">Modify &</span> Catalog
+        <button id="tab-btn-modify" onclick="showTab('modify')" class="tab-button py-3.5 px-3 text-center rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-900 text-white shadow">
+          <span>✏️</span> <span>Modify</span>
         </button>
-        <button id="tab-btn-orders" onclick="switchBuilderTab('orders')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
-          <span>📋</span> Orders <span id="tab-orders-badge" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+        <button id="tab-btn-orders" onclick="showTab('orders')" class="tab-button py-3.5 px-3 text-center rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
+          <span>📋</span> <span>Orders</span> <span id="tab-orders-badge" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
         </button>
-        <button id="tab-btn-feedback" onclick="switchBuilderTab('feedback')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
-          <span>💬</span> Feedback <span id="tab-fb-badge" class="hidden bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+        <button id="tab-btn-feedback" onclick="showTab('feedback')" class="tab-button py-3.5 px-3 text-center rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
+          <span>💬</span> <span>Feedback</span> <span id="tab-fb-badge" class="hidden bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
         </button>
       </div>
     </div>
 
-    <div id="tab-view-catalog" class="builder-view space-y-12">`n    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- VIEW 1: MODIFY & CATALOG -->
+    <div id="view-modify" class="builder-page-view space-y-12">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
       <!-- LEFT COLUMN: Product Editor Form (7 cols) -->
       <div id="editor-section" class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
@@ -617,6 +609,7 @@
     let catalog = [];
     let currentManagerFilter = 'all';
 
+    
     
     window.initStudio = function() {
       const saved = localStorage.getItem('moke_custom_products');
