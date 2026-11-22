@@ -213,26 +213,22 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Mobile Quick Navigation Tabs -->
-    <div class="lg:hidden flex items-center justify-between gap-1.5 mb-6 bg-stone-100 p-1.5 rounded-2xl sticky top-20 z-30 shadow-sm border border-stone-200">
-      <a href="#editor-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-stone-900 text-white shadow-sm transition">
-        ✏️ Piece
-      </a>
-      <a href="#preview-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl text-stone-700 hover:bg-white transition">
-        👁️ Preview
-      </a>
-      <a href="#inventory-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl text-stone-700 hover:bg-white transition">
-        📦 Catalog
-      </a>
-      <button onclick="openDatabaseModal()" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition flex items-center justify-center gap-1 font-bold">
-        📋 Orders (<span id="mobile-orders-badge">0</span>)
-      </button>
-      <button onclick="openFeedbackModal()" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-amber-100 text-amber-900 hover:bg-amber-200 transition flex items-center justify-center gap-1 font-bold relative">
-        💬 FB <span id="unread-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[9px] flex items-center justify-center">0</span>
-      </button>
+    <!-- 3 MAIN TABS (Sticky on phone and desktop) -->
+    <div class="sticky top-20 z-30 mb-8 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-stone-200">
+      <div class="grid grid-cols-3 gap-2">
+        <button id="tab-btn-catalog" onclick="switchBuilderTab('catalog')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-900 text-white shadow-sm">
+          <span>📦</span> <span class="hidden sm:inline">Modify &</span> Catalog
+        </button>
+        <button id="tab-btn-orders" onclick="switchBuilderTab('orders')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
+          <span>📋</span> Orders <span id="tab-orders-badge" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+        </button>
+        <button id="tab-btn-feedback" onclick="switchBuilderTab('feedback')" class="builder-tab-btn py-3 px-2 sm:px-4 text-center rounded-xl font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-stone-100 text-stone-600 hover:bg-stone-200">
+          <span>💬</span> Feedback <span id="tab-fb-badge" class="hidden bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+        </button>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div id="tab-view-catalog" class="builder-view space-y-12">`n    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
       <!-- LEFT COLUMN: Product Editor Form (7 cols) -->
       <div id="editor-section" class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
@@ -621,6 +617,7 @@
     let catalog = [];
     let currentManagerFilter = 'all';
 
+    
     window.initStudio = function() {
       const saved = localStorage.getItem('moke_custom_products');
       if (saved) {
