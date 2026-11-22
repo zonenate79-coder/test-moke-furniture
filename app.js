@@ -56,7 +56,7 @@ const quickViewBackdrop = document.getElementById('quick-view-backdrop');
 const closeQuickViewBtn = document.getElementById('close-quick-view-btn');
 const quickViewContent = document.getElementById('quick-view-content');
 
-// Checkout Modal Elements (@N8bee)
+// Checkout Modal Elements
 const checkoutModal = document.getElementById('checkout-modal');
 const checkoutBackdrop = document.getElementById('checkout-backdrop');
 const closeCheckoutBtn = document.getElementById('close-checkout-btn');
@@ -75,6 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   setupEventListeners();
   setupIcons();
+
+  // Initialize Customer Auth & Order Tracker
+  initCustomerAuth();
+  initCustomerOrdersTracker();
 
   // Real-time Cloud Firebase synchronization (Cross-device PC & Phone)
   if (window.MokeCloud && typeof MokeCloud.onProductsSync === 'function') {
@@ -242,7 +246,7 @@ function removeReceipt(e) {
   setupIcons();
 }
 
-// Telegram Checkout Logic (@N8bee)
+// Modal Controls
 function openCheckoutModal() {
   if (state.cart.length === 0) {
     showToast('Your shopping bag is currently empty.');
@@ -255,11 +259,9 @@ function openCheckoutModal() {
   const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
   if (checkoutItemCount) checkoutItemCount.textContent = `${totalCount} piece${totalCount > 1 ? 's' : ''}`;
-  if (checkoutTotalVal) checkoutTotalVal.textContent = `$${subtotal.toLocaleString()}`;
+  if (checkoutTotalVal) checkoutTotalVal.textContent = `${subtotal.toLocaleString()} Birr`;
   if (checkoutDeliveryText) {
-    checkoutDeliveryText.textContent = subtotal >= 1500 
-      ? 'Complimentary White-Glove In-Home Assembly included' 
-      : 'Standard Delivery ($120) • Free over $1,500';
+    checkoutDeliveryText.textContent = '🚚 Free Delivery on All Orders — White-Glove Assembly Included';
   }
   
   if (checkoutModal) checkoutModal.classList.remove('hidden');
@@ -272,13 +274,15 @@ function closeCheckoutModal() {
   document.body.classList.remove('overflow-hidden');
 }
 
-function handleCheckoutSubmit(e) {
+// Direct In-Site Order & Cloud Receipt Verification (No Telegram needed)
+async function handleCheckoutSubmit(e) {
   e.preventDefault();
   
   const nameInput = document.getElementById('cust-name');
   const phoneInput = document.getElementById('cust-phone');
   const addressInput = document.getElementById('cust-address');
   const notesInput = document.getElementById('cust-notes');
+  const submitBtn = document.getElementById('checkout-submit-btn');
 
   const name = nameInput ? nameInput.value.trim() : '';
   const phone = phoneInput ? phoneInput.value.trim() : '';
@@ -290,63 +294,496 @@ function handleCheckoutSubmit(e) {
     return;
   }
 
-  if (!uploadedReceiptData) {
-    if (!confirm('You have not attached a payment screenshot yet. Have you transferred the full payment and want to proceed to send it directly in Telegram chat?')) {
-      return;
-    }
+  // Phone must be numbers only and start with 09
+  if (!/^09\d{8,9}$/.test(phone)) {
+    alert('⚠️ Phone number must start with 09 and contain only numbers (e.g. 0911234567).');
+    if (phoneInput) { phoneInput.focus(); phoneInput.style.borderColor = '#ef4444'; }
+    return;
   }
-  
-  const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryText = subtotal >= 1500 ? 'Complimentary White-Glove In-Home Assembly' : 'Standard Delivery';
-  const payMethodName = currentPaymentMethod === 'cbe' ? 'CBE Bank (Acc: 100000838)' : 'Telebirr (No: 28398387)';
-  
-  // Save order to MokeDB database
-  if (window.MokeDB) {
-    MokeDB.createOrder({
-      name,
-      phone,
-      address,
-      notes,
-      paymentMethod: currentPaymentMethod === 'cbe' ? 'CBE Bank' : 'Telebirr',
-      paymentAccount: currentPaymentMethod === 'cbe' ? '100000838' : '28398387',
-      receiptName: uploadedReceiptData ? uploadedReceiptData.name : 'Attached in Telegram',
-      items: state.cart.map(i => ({ name: i.name, color: i.color, price: i.price, quantity: i.quantity, image: i.image })),
-      subtotal
-    });
+  if (phoneInput) phoneInput.style.borderColor = '';
+
+  if (!uploadedReceiptData) {
+    alert('⚠️ You must upload your payment screenshot before submitting. Please take a screenshot of your transfer and upload it.');
+    const dropzone = document.getElementById('screenshot-dropzone');
+    if (dropzone) {
+      dropzone.style.borderColor = '#ef4444';
+      dropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { dropzone.style.borderColor = ''; }, 3000);
+    }
+    return;
   }
 
-  // Format clear, professional message for Telegram
-  let text = `🛍️ *NEW ORDER - MOKE FURNITURE*\n\n`;
-  text += `👤 *Customer:* ${name}\n`;
-  text += `📞 *Phone:* ${phone}\n`;
-  text += `📍 *Delivery Address:* ${address}\n`;
-  if (notes) {
-    text += `📝 *Delivery Notes:* ${notes}\n`;
+  const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Submitting & Uploading Payment Proof...`;
+    setupIcons();
   }
-  text += `💳 *Payment Method:* ${payMethodName}\n`;
-  text += `💵 *Payment Status:* 100% Full Payment\n`;
-  if (uploadedReceiptData) {
-    text += `📎 *Receipt File:* ${uploadedReceiptData.name}\n`;
+
+  try {
+    // 1. Upload receipt to cloud (ImgBB / Firebase)
+    let receiptUrl = '';
+    if (window.MokeCloud && typeof MokeCloud.uploadScreenshot === 'function') {
+      receiptUrl = await MokeCloud.uploadScreenshot(uploadedReceiptData.dataUrl);
+    } else {
+      receiptUrl = uploadedReceiptData.dataUrl;
+    }
+
+    // 2. Prepare Order Object
+    const orderPayload = {
+      customerName: name,
+      customerPhone: phone,
+      customerAddress: address,
+      notes: notes,
+      customerEmail: currentCustomer ? currentCustomer.email : '',
+      userId: currentCustomer ? currentCustomer.uid : null,
+      paymentMethod: currentPaymentMethod === 'cbe' ? 'CBE Bank' : 'Telebirr',
+      paymentAccount: currentPaymentMethod === 'cbe' ? '100000838' : '28398387',
+      receiptUrl: receiptUrl || '',
+      receiptName: uploadedReceiptData.name || 'Transfer_Screenshot.jpg',
+      items: state.cart.map(i => ({ name: i.name, color: i.color, price: i.price, quantity: i.quantity, image: i.image })),
+      subtotal: subtotal,
+      status: 'pending',
+      statusNote: 'Payment screenshot received. Studio team is verifying.'
+    };
+
+    // 3. Save to Firebase Cloud
+    let orderId = null;
+    if (window.MokeCloud && typeof MokeCloud.createCloudOrder === 'function') {
+      orderId = await MokeCloud.createCloudOrder(orderPayload);
+    }
+    if (!orderId) {
+      orderId = 'ord_' + Date.now();
+    }
+
+    // 4. Save order ID to localStorage for this device
+    saveCustomerOrderId(orderId);
+
+    // Also sync to local DB if available
+    if (window.MokeDB) {
+      MokeDB.createOrder({ ...orderPayload, id: orderId });
+    }
+
+    // Clear cart and reset receipt
+    state.cart = [];
+    saveCart();
+    updateCartUI();
+    closeCheckoutModal();
+    removeReceipt();
+
+    showToast('🎉 Order placed successfully! Studio verifying payment...');
+    
+    // Automatically open Customer Orders Modal so they see their pending status!
+    setTimeout(() => {
+      openOrdersModal();
+    }, 400);
+
+  } catch (err) {
+    console.error('Checkout error:', err);
+    alert('Error submitting order: ' + (err.message || err));
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Place Order & Submit Payment Proof`;
+      setupIcons();
+    }
   }
-  text += `\n🛋️ *Ordered Pieces:*\n`;
-  state.cart.forEach(item => {
-    text += `• ${item.quantity}x ${item.name} (${item.color}) - $${(item.price * item.quantity).toLocaleString()}\n`;
+}
+
+// =========================================================================
+// CUSTOMER AUTHENTICATION (Firebase Auth)
+// =========================================================================
+let currentCustomer = null;
+
+function initCustomerAuth() {
+  if (window.MokeCloud && typeof MokeCloud.onAuthChange === 'function') {
+    MokeCloud.onAuthChange((user) => {
+      currentCustomer = user;
+      updateAuthUI();
+      loadCustomerOrders();
+    });
+  } else {
+    updateAuthUI();
+  }
+}
+
+function updateAuthUI() {
+  const container = document.getElementById('auth-header-container');
+  const mobileAuthBtn = document.getElementById('mobile-auth-btn');
+
+  if (!container) return;
+
+  if (currentCustomer) {
+    const name = currentCustomer.displayName || currentCustomer.email.split('@')[0];
+    container.innerHTML = `
+      <div class="relative group">
+        <button id="auth-btn" class="text-xs font-semibold uppercase tracking-wider text-stone-900 bg-stone-100 px-3 py-2 rounded-full border border-stone-300 hover:bg-stone-200 transition flex items-center gap-1.5">
+          <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span class="max-w-[70px] sm:max-w-[110px] truncate">${name}</span>
+          <i data-lucide="chevron-down" class="w-3 h-3 text-stone-400"></i>
+        </button>
+        <div class="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 hidden group-hover:block hover:block z-50">
+          <div class="px-4 py-2 border-b border-stone-100">
+            <p class="text-[10px] text-stone-400 uppercase font-semibold">Signed in as</p>
+            <p class="text-xs font-medium text-stone-800 truncate">${currentCustomer.email}</p>
+          </div>
+          <button onclick="openOrdersModal()" class="w-full text-left px-4 py-2 text-xs text-stone-700 hover:bg-stone-50 flex items-center gap-2">
+            <i data-lucide="package" class="w-3.5 h-3.5"></i> My Orders
+          </button>
+          <button onclick="handleCustomerSignOut()" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Log Out
+          </button>
+        </div>
+      </div>
+    `;
+    if (mobileAuthBtn) {
+      mobileAuthBtn.innerHTML = `<i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i> Log Out (${name})`;
+      mobileAuthBtn.onclick = () => { toggleMobileMenu(); handleCustomerSignOut(); };
+    }
+  } else {
+    container.innerHTML = `
+      <button id="auth-btn" onclick="openAuthModal('login')" class="text-xs font-semibold uppercase tracking-wider text-stone-800 hover:text-stone-950 px-3 py-2 rounded-full border border-stone-200 hover:bg-stone-100 transition flex items-center gap-1.5">
+        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+        <span>Log In</span>
+      </button>
+    `;
+    if (mobileAuthBtn) {
+      mobileAuthBtn.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Log In / Sign Up`;
+      mobileAuthBtn.onclick = () => { toggleMobileMenu(); openAuthModal('login'); };
+    }
+  }
+  setupIcons();
+}
+
+function openAuthModal(view = 'login') {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.remove('hidden');
+  switchAuthView(view);
+  document.body.classList.add('overflow-hidden');
+  setupIcons();
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+function switchAuthView(view) {
+  const loginView = document.getElementById('auth-login-view');
+  const signupView = document.getElementById('auth-signup-view');
+  const forgotView = document.getElementById('auth-forgot-view');
+  
+  if (loginView) loginView.classList.add('hidden');
+  if (signupView) signupView.classList.add('hidden');
+  if (forgotView) forgotView.classList.add('hidden');
+
+  if (view === 'login' && loginView) loginView.classList.remove('hidden');
+  if (view === 'signup' && signupView) signupView.classList.remove('hidden');
+  if (view === 'forgot' && forgotView) forgotView.classList.remove('hidden');
+  setupIcons();
+}
+
+async function handleCustomerLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email')?.value.trim();
+  const password = document.getElementById('login-password')?.value;
+  const errEl = document.getElementById('login-error-msg');
+  const btn = document.getElementById('login-submit-btn');
+
+  if (errEl) errEl.classList.add('hidden');
+  if (btn) btn.disabled = true;
+
+  try {
+    if (!window.MokeCloud) throw new Error('Cloud services initializing, please retry.');
+    await MokeCloud.signIn(email, password);
+    closeAuthModal();
+    showToast('Welcome back to Moke Furniture!');
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Login failed. Please check your credentials.';
+      errEl.classList.remove('hidden');
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleCustomerSignup(e) {
+  e.preventDefault();
+  const name = document.getElementById('signup-name')?.value.trim();
+  const email = document.getElementById('signup-email')?.value.trim();
+  const password = document.getElementById('signup-password')?.value;
+  const errEl = document.getElementById('signup-error-msg');
+  const btn = document.getElementById('signup-submit-btn');
+
+  if (errEl) errEl.classList.add('hidden');
+  if (btn) btn.disabled = true;
+
+  try {
+    if (!window.MokeCloud) throw new Error('Cloud services initializing, please retry.');
+    await MokeCloud.signUp(email, password, name);
+    closeAuthModal();
+    showToast(`Welcome, ${name || 'friend'}! Your account is ready.`);
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Signup failed. Please try again.';
+      errEl.classList.remove('hidden');
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleCustomerGoogleLogin() {
+  try {
+    if (!window.MokeCloud) throw new Error('Cloud services initializing, please retry.');
+    await MokeCloud.signInWithGoogle();
+    closeAuthModal();
+    showToast('Signed in with Google!');
+  } catch (err) {
+    alert(err.message || 'Google sign-in was cancelled or failed.');
+  }
+}
+
+async function handleCustomerResetPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('forgot-email')?.value.trim();
+  const msgEl = document.getElementById('forgot-msg');
+  const btn = document.getElementById('forgot-submit-btn');
+
+  if (!email) return;
+  if (btn) btn.disabled = true;
+
+  try {
+    if (!window.MokeCloud) throw new Error('Cloud services initializing.');
+    await MokeCloud.sendPasswordReset(email);
+    if (msgEl) {
+      msgEl.className = 'text-xs p-2.5 rounded-xl text-center bg-emerald-50 text-emerald-700 border border-emerald-200 block';
+      msgEl.textContent = 'Password reset email sent! Check your inbox.';
+    }
+  } catch (err) {
+    if (msgEl) {
+      msgEl.className = 'text-xs p-2.5 rounded-xl text-center bg-red-50 text-red-600 border border-red-200 block';
+      msgEl.textContent = err.message || 'Could not send reset email.';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleCustomerSignOut() {
+  if (window.MokeCloud) {
+    await MokeCloud.signOut();
+  }
+  showToast('Signed out successfully.');
+}
+
+// =========================================================================
+// CUSTOMER ORDER TRACKING & LIVE VERIFICATION
+// =========================================================================
+let myOrdersListener = null;
+
+function getSavedOrderIds() {
+  try {
+    return JSON.parse(localStorage.getItem('moke_customer_order_ids') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCustomerOrderId(id) {
+  const ids = getSavedOrderIds();
+  if (!ids.includes(id)) {
+    ids.unshift(id);
+    localStorage.setItem('moke_customer_order_ids', JSON.stringify(ids));
+  }
+}
+
+function openOrdersModal() {
+  const modal = document.getElementById('customer-orders-modal');
+  if (modal) modal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+  loadCustomerOrders();
+  setupIcons();
+}
+
+function closeOrdersModal() {
+  const modal = document.getElementById('customer-orders-modal');
+  if (modal) modal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+function initCustomerOrdersTracker() {
+  loadCustomerOrders();
+}
+
+function loadCustomerOrders() {
+  const container = document.getElementById('customer-orders-list');
+  const badge = document.getElementById('orders-badge');
+  if (!container) return;
+
+  const savedIds = getSavedOrderIds();
+  const customerEmail = currentCustomer ? currentCustomer.email : null;
+
+  if (typeof firebase === 'undefined' || !firebase.firestore) {
+    // Offline or fallback to localStorage MokeDB
+    const localOrders = (window.MokeDB ? MokeDB.getOrders() : []).filter(o => {
+      return savedIds.includes(o.id) || (customerEmail && o.customerEmail === customerEmail);
+    });
+    renderCustomerOrdersList(localOrders);
+    return;
+  }
+
+  const db = firebase.firestore();
+  
+  if (myOrdersListener) myOrdersListener();
+
+  myOrdersListener = db.collection('orders').onSnapshot((snapshot) => {
+    const matchedOrders = [];
+    let hasPending = false;
+
+    snapshot.forEach(doc => {
+      const data = { id: doc.id, ...doc.data() };
+      const isMine = savedIds.includes(doc.id) || 
+                     (customerEmail && data.customerEmail && data.customerEmail.toLowerCase() === customerEmail.toLowerCase()) ||
+                     (currentCustomer && data.userId && data.userId === currentCustomer.uid);
+      if (isMine) {
+        matchedOrders.push(data);
+        if (data.status === 'pending') hasPending = true;
+      }
+    });
+
+    // Update notification badge
+    if (badge) {
+      if (hasPending) {
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    matchedOrders.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    renderCustomerOrdersList(matchedOrders);
+  }, (err) => {
+    console.warn('Orders listener notice:', err);
   });
-  text += `\n💰 *Total Amount:* $${subtotal.toLocaleString()}\n`;
-  text += `🚚 *Delivery:* ${deliveryText}\n\n`;
-  text += `📸 *Payment Screenshot:* (Attached below)`;
-  
-  const telegramUrl = `https://t.me/N8bee?text=${encodeURIComponent(text)}`;
-  
-  // Clear cart and close modal
-  state.cart = [];
-  saveCart();
-  updateCartUI();
-  closeCheckoutModal();
-  removeReceipt();
-  
-  showToast('Opening Telegram with your order details...');
-  window.open(telegramUrl, '_blank');
+}
+
+function renderCustomerOrdersList(orders) {
+  const container = document.getElementById('customer-orders-list');
+  if (!container) return;
+
+  if (!orders || orders.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 px-4 bg-stone-50 rounded-2xl border border-stone-200">
+        <i data-lucide="package-open" class="w-12 h-12 text-stone-300 mx-auto mb-3"></i>
+        <h4 class="text-base font-serif text-stone-800">No Orders Placed Yet</h4>
+        <p class="text-xs text-stone-500 mt-1 max-w-sm mx-auto">When you order handcrafted pieces and upload your payment proof, you can track studio approval here in real time.</p>
+      </div>
+    `;
+    setupIcons();
+    return;
+  }
+
+  container.innerHTML = orders.map(order => {
+    const isApproved = order.status === 'approved';
+    const isRejected = order.status === 'rejected';
+    const isPending = !isApproved && !isRejected;
+
+    let statusBadge = '';
+    let statusBanner = '';
+
+    if (isPending) {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+        🟡 Pending Verification
+      </span>`;
+      statusBanner = `
+        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+          <i data-lucide="clock" class="w-4 h-4 text-amber-700 shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="font-semibold">Payment Screenshot Received</strong>
+            <p class="text-[11px] text-amber-800 mt-0.5">Our studio manager is verifying your bank transfer. Once confirmed, your order status will automatically change here.</p>
+          </div>
+        </div>
+      `;
+    } else if (isApproved) {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
+        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+        ✅ Confirmed & Approved
+      </span>`;
+      statusBanner = `
+        <div class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-950 flex items-start gap-2.5">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="font-semibold text-emerald-900">Order Confirmed!</strong>
+            <p class="text-[11px] text-emerald-800 mt-0.5">${order.statusNote || 'We will contact you soon on your phone to arrange white-glove delivery.'}</p>
+          </div>
+        </div>
+      `;
+    } else {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-800 border border-red-300">
+        <i data-lucide="x-circle" class="w-3.5 h-3.5 text-red-600"></i>
+        ❌ Rejected
+      </span>`;
+      statusBanner = `
+        <div class="bg-red-50/80 border border-red-200 rounded-xl p-3 text-xs text-red-950 flex items-start gap-2.5">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="font-semibold text-red-900">Payment Not Verified</strong>
+            <p class="text-[11px] text-red-800 mt-0.5">${order.statusNote || 'The payment screenshot could not be confirmed with the bank account. Please check your transfer or reach out to our team.'}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    const itemsList = (order.items || []).map(i => `
+      <div class="flex items-center justify-between text-xs py-1 border-b border-stone-100 last:border-0">
+        <span class="text-stone-700">${i.quantity}x ${i.name} (${i.color || 'Standard'})</span>
+        <span class="font-mono font-medium text-stone-900">${(i.price * i.quantity).toLocaleString()} Birr</span>
+      </div>
+    `).join('');
+
+    const formattedDate = order.createdAt ? new Date(order.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent';
+
+    return `
+      <div class="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3.5">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-3">
+          <div>
+            <span class="text-[10px] text-stone-400 uppercase tracking-widest font-semibold block">Order #${order.id.slice(0, 8)}</span>
+            <span class="text-xs text-stone-500">${formattedDate}</span>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+
+        ${statusBanner}
+
+        <div class="bg-white rounded-xl p-3 border border-stone-200">
+          <div class="text-[10px] text-stone-400 uppercase tracking-wider font-semibold mb-2">Pieces Ordered</div>
+          <div class="divide-y divide-stone-100">${itemsList}</div>
+          <div class="flex justify-between items-center pt-2 mt-2 border-t border-stone-200 text-xs font-semibold text-stone-900">
+            <span>Total Amount:</span>
+            <span class="text-sm font-mono text-stone-900">${(order.subtotal || 0).toLocaleString()} Birr</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between text-xs text-stone-600 gap-2 pt-1">
+          <div>
+            <span class="font-medium text-stone-800">Payment:</span> ${order.paymentMethod || 'Bank Transfer'}
+          </div>
+          ${order.receiptUrl ? `
+            <a href="${order.receiptUrl}" target="_blank" class="inline-flex items-center gap-1 text-stone-800 hover:underline font-medium">
+              <i data-lucide="image" class="w-3.5 h-3.5"></i> View Uploaded Screenshot
+            </a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  setupIcons();
 }
 
 // Option B: Set Section Filter (e.g. sofas -> leather)
@@ -406,8 +843,10 @@ function renderSection(category) {
   const limit = sectionState[category].limit;
 
   // Always pull from activeProducts (includes custom added/modified pieces)
+  // Filter out hidden products
   const items = activeProducts.filter(p => {
     if (p.category !== category) return false;
+    if (p.hidden === true) return false;
     if (currentFilter === 'all') return true;
     return p.filterTag === currentFilter;
   });
@@ -494,9 +933,9 @@ function renderSection(category) {
           <!-- Bottom Row: Clean Price -->
           <div class="pt-1.5 sm:pt-2 border-t border-stone-100 flex items-center justify-between">
             <div class="flex items-baseline gap-1.5 sm:gap-2">
-              <span class="text-xs sm:text-base font-semibold text-stone-900">$${product.price.toLocaleString()}</span>
+              <span class="text-xs sm:text-base font-semibold text-stone-900">${product.price.toLocaleString()} Birr</span>
               ${product.originalPrice ? `
-                <span class="text-[10px] sm:text-xs text-stone-400 line-through">$${product.originalPrice.toLocaleString()}</span>
+                <span class="text-[10px] sm:text-xs text-stone-400 line-through">${product.originalPrice.toLocaleString()} Birr</span>
               ` : ''}
             </div>
           </div>
@@ -515,10 +954,9 @@ function renderSection(category) {
             <button 
               onclick="toggleSectionExpand('${category}')" 
               class="px-8 py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-xs font-semibold uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2.5">
-              <span>See More ${category.charAt(0).toUpperCase() + category.slice(1)} (${remaining} more)</span>
+              <span>See More</span>
               <i data-lucide="chevron-down" class="w-4 h-4"></i>
             </button>
-            <p class="text-[11px] text-stone-400">Showing ${displayed.length} of ${items.length} pieces</p>
           </div>
         `;
       } else {
@@ -530,7 +968,6 @@ function renderSection(category) {
               <span>Show Less</span>
               <i data-lucide="chevron-up" class="w-4 h-4"></i>
             </button>
-            <p class="text-[11px] text-stone-400">Showing all ${items.length} pieces</p>
           </div>
         `;
       }
@@ -674,16 +1111,16 @@ function renderQuickViewModal() {
           
           <!-- Price -->
           <div class="flex items-baseline gap-2 sm:gap-3 mb-2.5 sm:mb-4">
-            <span class="text-xl sm:text-2xl font-semibold text-stone-900">$${product.price.toLocaleString()}</span>
+            <span class="text-xl sm:text-2xl font-semibold text-stone-900">${product.price.toLocaleString()} Birr</span>
             ${product.originalPrice ? `
-              <span class="text-xs sm:text-sm text-stone-400 line-through">$${product.originalPrice.toLocaleString()}</span>
+              <span class="text-xs sm:text-sm text-stone-400 line-through">${product.originalPrice.toLocaleString()} Birr</span>
               <span class="text-[10px] sm:text-xs font-bold text-amber-800 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded-full">Save ${discount}%</span>
             ` : ''}
           </div>
 
           <p class="text-[11px] sm:text-xs text-stone-500 mb-3 sm:mb-5 flex items-center gap-1.5">
             <i data-lucide="shield-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
-            Or 4 payments of <strong>$${klarna}</strong> with Klarna. Includes 10-year frame warranty.
+            🚚 Free Delivery on All Orders. Includes 10-year frame warranty.
           </p>
 
           <!-- Description -->
@@ -730,7 +1167,7 @@ function renderQuickViewModal() {
             onclick="addQuickViewToCart()"
             class="flex-1 py-3.5 px-6 bg-stone-900 hover:bg-stone-800 text-white rounded-xl font-medium text-xs tracking-wider uppercase shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
             <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-            Add to Bag • $${(product.price * state.quickViewQty).toLocaleString()}
+            Add to Bag • ${(product.price * state.quickViewQty).toLocaleString()} Birr
           </button>
         </div>
       </div>
@@ -835,21 +1272,14 @@ function updateCartUI() {
     cartBadge.classList.toggle('opacity-0', totalCount === 0);
   }
 
-  if (cartSubtotalEl) cartSubtotalEl.textContent = `$${subtotal.toLocaleString()}`;
-  if (cartTotalEl) cartTotalEl.textContent = `$${subtotal.toLocaleString()}`;
+  if (cartSubtotalEl) cartSubtotalEl.textContent = `${subtotal.toLocaleString()} Birr`;
+  if (cartTotalEl) cartTotalEl.textContent = `${subtotal.toLocaleString()} Birr`;
 
-  // Free shipping threshold ($1,500)
+  // Free delivery — always free for Moke
   const threshold = 1500;
   if (freeShippingProgress && freeShippingText) {
-    const percent = Math.min(100, Math.round((subtotal / threshold) * 100));
-    freeShippingProgress.style.width = `${percent}%`;
-
-    if (subtotal >= threshold) {
-      freeShippingText.innerHTML = `<strong>You've unlocked complimentary White-Glove delivery!</strong>`;
-    } else {
-      const remaining = threshold - subtotal;
-      freeShippingText.innerHTML = `Add <strong>$${remaining.toLocaleString()}</strong> more for complimentary White-Glove Delivery`;
-    }
+    freeShippingProgress.style.width = `100%`;
+    freeShippingText.innerHTML = `<strong>🚚 Free Delivery on All Orders!</strong>`;
   }
 
   // Render items
@@ -882,7 +1312,7 @@ function updateCartUI() {
               <p class="text-xs text-stone-500">${item.color}</p>
             </div>
             <div class="flex justify-between items-center mt-2">
-              <span class="font-semibold text-stone-900 text-sm">$${(item.price * item.quantity).toLocaleString()}</span>
+              <span class="font-semibold text-stone-900 text-sm">${(item.price * item.quantity).toLocaleString()} Birr</span>
               <div class="flex items-center border border-stone-300 rounded-lg bg-white overflow-hidden">
                 <button onclick="updateCartItemQty(${idx}, -1)" class="px-2 py-1 hover:bg-stone-100 text-stone-600 text-xs font-semibold">-</button>
                 <span class="w-7 text-center font-medium text-xs text-stone-900">${item.quantity}</span>
