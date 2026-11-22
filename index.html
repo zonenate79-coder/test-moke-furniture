@@ -77,7 +77,7 @@
   <!-- Top Announcement Bar -->
   <aside aria-label="Announcement" class="bg-stone-900 text-stone-200 text-[11px] font-medium tracking-widest uppercase py-2 px-4 text-center border-b border-stone-800">
     <div class="max-w-7xl mx-auto flex items-center justify-center gap-3">
-      <span>Complimentary White-Glove In-Home Assembly on orders over $1,500</span>
+      <span>🚚 Free Delivery on All Orders — Addis Ababa &amp; Beyond</span>
       <span class="hidden md:inline text-stone-600">•</span>
       <span class="hidden md:inline text-stone-400">Handcrafted Sustainable Timber</span>
     </div>
@@ -116,9 +116,25 @@
         </a>
       </div>
 
-      <!-- Right: Action Icons (Bag) -->
-      <div class="flex items-center gap-3 sm:gap-4">
-        <button id="cart-btn" class="relative p-2.5 text-stone-800 hover:text-stone-950 transition rounded-full hover:bg-stone-100 flex items-center gap-2 border border-stone-200" aria-label="Shopping bag">
+      <!-- Right: Action Icons (Auth, Orders, Bag) -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Auth Button / User Profile -->
+        <div id="auth-header-container" class="relative">
+          <button id="auth-btn" onclick="openAuthModal('login')" class="text-xs font-semibold uppercase tracking-wider text-stone-800 hover:text-stone-950 px-3 py-2 rounded-full border border-stone-200 hover:bg-stone-100 transition flex items-center gap-1.5">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+            <span>Log In</span>
+          </button>
+        </div>
+
+        <!-- Orders Tracking Button -->
+        <button id="orders-btn" onclick="openOrdersModal()" class="relative p-2 sm:px-3 sm:py-2 text-stone-800 hover:text-stone-950 transition rounded-full hover:bg-stone-100 flex items-center gap-1.5 border border-stone-200" title="My Orders & Verification">
+          <i data-lucide="package" class="w-4 h-4"></i>
+          <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider">Orders</span>
+          <span id="orders-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white animate-pulse"></span>
+        </button>
+
+        <!-- Bag Button -->
+        <button id="cart-btn" class="relative p-2 sm:px-3 sm:py-2 text-stone-800 hover:text-stone-950 transition rounded-full hover:bg-stone-100 flex items-center gap-2 border border-stone-200" aria-label="Shopping bag">
           <i data-lucide="shopping-bag" class="w-4 h-4"></i>
           <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider">Bag</span>
           <span id="cart-badge" class="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md transition opacity-0">
@@ -136,6 +152,13 @@
       <a href="#chairs" onclick="toggleMobileMenu()" class="hover:text-amber-300">Chairs</a>
       <a href="#tables" onclick="toggleMobileMenu()" class="hover:text-amber-300">Tables</a>
       <a href="#about" onclick="toggleMobileMenu()" class="hover:text-amber-300">The Moke Craft</a>
+      <hr class="border-stone-800 my-1" />
+      <button onclick="toggleMobileMenu(); openOrdersModal();" class="text-left flex items-center gap-2 hover:text-amber-300">
+        <i data-lucide="package" class="w-4 h-4"></i> My Orders & Status
+      </button>
+      <button id="mobile-auth-btn" onclick="toggleMobileMenu(); openAuthModal('login');" class="text-left flex items-center gap-2 text-amber-400 hover:text-amber-300 font-semibold">
+        <i data-lucide="user" class="w-4 h-4"></i> Log In / Sign Up
+      </button>
     </div>
   </div>
 
@@ -463,8 +486,8 @@
 
       <!-- Dedicated Bottom Copyright Bar: Absolute end on mobile and desktop -->
       <div class="pt-8 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-        <p class="text-[11px] text-stone-400 tracking-wide">
-          © 2026 Moke Furniture. Handcrafted with FSC Timber. All rights reserved.
+        <p class="text-xs sm:text-[11px] text-stone-500 font-medium tracking-wide">
+          © 2026 MOKE Furniture • 🚚 Free Delivery on All Orders • All Rights Reserved
         </p>
         <div class="flex items-center gap-6 text-[11px] text-stone-400">
           <a href="javascript:void(0)" class="hover:text-stone-700 transition">Privacy Policy</a>
@@ -557,7 +580,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- TELEGRAM & DIRECT CHECKOUT MODAL (@N8bee)                                 -->
+  <!-- CHECKOUT MODAL (Order & Payment Verification)                            -->
   <!-- ========================================================================= -->
   <div id="checkout-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-6">
     <div id="checkout-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
@@ -572,7 +595,7 @@
           </div>
           <div>
             <h3 class="font-serif text-xl text-stone-900 leading-none">Confirm Delivery & Pay</h3>
-            <span class="text-[10px] text-stone-500 uppercase tracking-wider font-medium">Direct Verification with <strong class="text-sky-700">@N8bee</strong></span>
+            <span class="text-[10px] text-stone-500 uppercase tracking-wider font-medium">Direct Verification · Moke Furniture Studio</span>
           </div>
         </div>
         <button id="close-checkout-btn" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close checkout">
@@ -687,8 +710,6 @@
 
       <!-- Customer Form Fields -->
       <form id="checkout-form" class="space-y-3.5">
-      <!-- Customer Form Fields -->
-      <form id="checkout-form" class="space-y-3.5">
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Your Full Name *</label>
           <input type="text" id="cust-name" required placeholder="e.g. Alex Morgan" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
@@ -709,14 +730,175 @@
           <input type="text" id="cust-notes" placeholder="e.g. 2nd floor, call before arriving" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
         </div>
 
-        <button type="submit" class="w-full py-4 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-4">
-          <i data-lucide="send" class="w-4 h-4"></i> Send Order & Screenshot to @N8bee
+        <button type="submit" id="checkout-submit-btn" class="w-full py-4 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-4">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Place Order & Submit Payment Proof
         </button>
       </form>
       
       <p class="text-[10px] text-center text-stone-400 mt-3 flex items-center justify-center gap-1.5">
         <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i> Direct verification with Moke Furniture Studio
       </p>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- AUTHENTICATION MODAL (Log In & Sign Up)                                   -->
+  <!-- ========================================================================= -->
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div id="auth-backdrop" onclick="closeAuthModal()" class="fixed inset-0 bg-stone-950/70 backdrop-blur-sm transition-opacity"></div>
+    
+    <div class="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition" aria-label="Close modal">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- BRAND LOGO -->
+      <div class="text-center mb-6">
+        <span class="font-serif text-2xl tracking-[0.25em] font-normal uppercase text-stone-900">MOKE</span>
+        <span class="block text-[9px] uppercase tracking-[0.35em] text-stone-400 font-sans -mt-1">FURNITURE</span>
+      </div>
+
+      <!-- VIEW 1: LOG IN -->
+      <div id="auth-login-view">
+        <div class="text-center mb-6">
+          <h3 class="font-serif text-2xl text-stone-900">Log In</h3>
+          <p class="text-xs text-stone-500 mt-1">Welcome back. Enter your account details.</p>
+        </div>
+
+        <form id="login-form" onsubmit="handleCustomerLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Email Address</label>
+            <input type="email" id="login-email" required placeholder="you@example.com" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] font-semibold uppercase tracking-wider text-stone-700">Password</label>
+              <button type="button" onclick="switchAuthView('forgot')" class="text-[11px] text-amber-800 hover:underline">Forgot?</button>
+            </div>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div id="login-error-msg" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 text-center"></div>
+
+          <button type="submit" id="login-submit-btn" class="w-full py-3.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-md transition flex items-center justify-center gap-2">
+            <span>Log In</span>
+          </button>
+        </form>
+
+        <div class="relative my-5">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-stone-200"></div></div>
+          <div class="relative flex justify-center text-[10px] uppercase tracking-widest"><span class="bg-white px-3 text-stone-400">or</span></div>
+        </div>
+
+        <!-- Google Log In Button -->
+        <button type="button" onclick="handleCustomerGoogleLogin()" class="w-full py-3 px-4 bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2.5">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Toggle to Sign Up -->
+        <p class="text-xs text-center text-stone-500 mt-6">
+          Don't have an account? 
+          <button type="button" onclick="switchAuthView('signup')" class="text-stone-900 font-bold hover:underline ml-1">Sign Up</button>
+        </p>
+      </div>
+
+      <!-- VIEW 2: SIGN UP -->
+      <div id="auth-signup-view" class="hidden">
+        <div class="text-center mb-6">
+          <h3 class="font-serif text-2xl text-stone-900">Create Account</h3>
+          <p class="text-xs text-stone-500 mt-1">Join Moke for easy orders & tracking.</p>
+        </div>
+
+        <form id="signup-form" onsubmit="handleCustomerSignup(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Your Full Name</label>
+            <input type="text" id="signup-name" required placeholder="Abebe Kebede" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Email Address</label>
+            <input type="email" id="signup-email" required placeholder="you@example.com" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Password</label>
+            <input type="password" id="signup-password" minlength="6" required placeholder="At least 6 characters" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div id="signup-error-msg" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 text-center"></div>
+
+          <button type="submit" id="signup-submit-btn" class="w-full py-3.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-md transition flex items-center justify-center gap-2">
+            <span>Create Account</span>
+          </button>
+        </form>
+
+        <div class="relative my-5">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-stone-200"></div></div>
+          <div class="relative flex justify-center text-[10px] uppercase tracking-widest"><span class="bg-white px-3 text-stone-400">or</span></div>
+        </div>
+
+        <button type="button" onclick="handleCustomerGoogleLogin()" class="w-full py-3 px-4 bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2.5">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Toggle back to Log In -->
+        <p class="text-xs text-center text-stone-500 mt-6">
+          Already have an account? 
+          <button type="button" onclick="switchAuthView('login')" class="text-stone-900 font-bold hover:underline ml-1">Log In</button>
+        </p>
+      </div>
+
+      <!-- VIEW 3: FORGOT PASSWORD -->
+      <div id="auth-forgot-view" class="hidden">
+        <div class="text-center mb-6">
+          <h3 class="font-serif text-2xl text-stone-900">Reset Password</h3>
+          <p class="text-xs text-stone-500 mt-1">Enter your email and we'll send a reset link.</p>
+        </div>
+
+        <form onsubmit="handleCustomerResetPassword(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Email Address</label>
+            <input type="email" id="forgot-email" required placeholder="you@example.com" class="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+
+          <div id="forgot-msg" class="hidden text-xs p-2.5 rounded-xl text-center"></div>
+
+          <button type="submit" id="forgot-submit-btn" class="w-full py-3.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-md transition flex items-center justify-center gap-2">
+            <span>Send Password Reset Link</span>
+          </button>
+        </form>
+
+        <p class="text-xs text-center text-stone-500 mt-6">
+          <button type="button" onclick="switchAuthView('login')" class="text-stone-900 font-bold hover:underline">← Back to Log In</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CUSTOMER ORDERS & STATUS TRACKING MODAL                                   -->
+  <!-- ========================================================================= -->
+  <div id="customer-orders-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div id="orders-backdrop" onclick="closeOrdersModal()" class="fixed inset-0 bg-stone-950/70 backdrop-blur-sm transition-opacity"></div>
+    
+    <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 z-10 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+        <div>
+          <h3 class="font-serif text-2xl text-stone-900">My Orders & Status</h3>
+          <p class="text-xs text-stone-500">Live order status and studio verification</p>
+        </div>
+        <button onclick="closeOrdersModal()" class="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition" aria-label="Close modal">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Real-time orders container -->
+      <div id="customer-orders-list" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
     </div>
   </div>
 
@@ -728,7 +910,9 @@
 
   <!-- Firebase Cloud SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="data/firebase-sync.js"></script>
 
   <!-- Scripts -->
