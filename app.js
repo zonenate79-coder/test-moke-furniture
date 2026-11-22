@@ -415,30 +415,16 @@ function updateAuthUI() {
   if (!container) return;
 
   if (currentCustomer) {
-    const name = currentCustomer.displayName || currentCustomer.email.split('@')[0];
+    // Option 2: Clean & Minimalist — No name displayed on screen, discreet Log Out in corner
     container.innerHTML = `
-      <div class="relative group">
-        <button id="auth-btn" class="text-xs font-semibold uppercase tracking-wider text-stone-900 bg-stone-100 px-3 py-2 rounded-full border border-stone-300 hover:bg-stone-200 transition flex items-center gap-1.5">
-          <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-600"></i>
-          <span class="max-w-[70px] sm:max-w-[110px] truncate">${name}</span>
-          <i data-lucide="chevron-down" class="w-3 h-3 text-stone-400"></i>
-        </button>
-        <div class="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 hidden group-hover:block hover:block z-50">
-          <div class="px-4 py-2 border-b border-stone-100">
-            <p class="text-[10px] text-stone-400 uppercase font-semibold">Signed in as</p>
-            <p class="text-xs font-medium text-stone-800 truncate">${currentCustomer.email}</p>
-          </div>
-          <button onclick="openOrdersModal()" class="w-full text-left px-4 py-2 text-xs text-stone-700 hover:bg-stone-50 flex items-center gap-2">
-            <i data-lucide="package" class="w-3.5 h-3.5"></i> My Orders
-          </button>
-          <button onclick="handleCustomerSignOut()" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Log Out
-          </button>
-        </div>
-      </div>
+      <button onclick="handleCustomerSignOut()" class="text-xs font-semibold uppercase tracking-wider text-stone-600 hover:text-stone-950 px-3 py-2 rounded-full border border-stone-200 hover:bg-stone-100 transition flex items-center gap-1.5" title="Log Out">
+        <i data-lucide="log-out" class="w-3.5 h-3.5 text-stone-400"></i>
+        <span>Log Out</span>
+      </button>
     `;
     if (mobileAuthBtn) {
-      mobileAuthBtn.innerHTML = `<i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i> Log Out (${name})`;
+      mobileAuthBtn.innerHTML = `<i data-lucide="log-out" class="w-4 h-4 text-stone-400"></i> Log Out`;
+      mobileAuthBtn.className = "text-left flex items-center gap-2 text-stone-400 hover:text-white font-medium";
       mobileAuthBtn.onclick = () => { toggleMobileMenu(); handleCustomerSignOut(); };
     }
   } else {
@@ -450,6 +436,7 @@ function updateAuthUI() {
     `;
     if (mobileAuthBtn) {
       mobileAuthBtn.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Log In / Sign Up`;
+      mobileAuthBtn.className = "text-left flex items-center gap-2 text-amber-400 hover:text-amber-300 font-semibold";
       mobileAuthBtn.onclick = () => { toggleMobileMenu(); openAuthModal('login'); };
     }
   }
@@ -543,6 +530,7 @@ async function handleCustomerGoogleLogin() {
     closeAuthModal();
     showToast('Signed in with Google!');
   } catch (err) {
+    if (err.code === 'auth/popup-closed-by-user') return; // User closed popup, no error needed
     alert(err.message || 'Google sign-in was cancelled or failed.');
   }
 }
