@@ -330,6 +330,51 @@ window.MokeCloud = {
     });
   },
 
+  // Submit customer feedback to Firestore
+  async submitFeedback(feedbackData) {
+    if (!firestoreDb) return false;
+    try {
+      await firestoreDb.collection('feedback').add({
+        ...feedbackData,
+        createdAt: new Date().toISOString(),
+        status: 'unread'
+      });
+      return true;
+    } catch(e) {
+      console.warn('Feedback submit error:', e);
+      return false;
+    }
+  },
+
+  // Load all feedback from Firestore (admin use)
+  async loadFeedback(callback) {
+    if (!firestoreDb) { if(callback) callback([]); return; }
+    try {
+      firestoreDb.collection('feedback').orderBy('createdAt', 'desc').limit(100)
+        .onSnapshot(snapshot => {
+          const items = [];
+          snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+          if (callback) callback(items);
+        });
+    } catch(e) {
+      console.warn('Load feedback error:', e);
+      if(callback) callback([]);
+    }
+  },
+
+  // Mark feedback as read
+  async markFeedbackRead(id) {
+    if (!firestoreDb) return;
+    try { await firestoreDb.collection('feedback').doc(id).update({ status: 'read' }); }
+    catch(e) {}
+  },
+
+  // Delete feedback
+  async deleteFeedback(id) {
+    if (!firestoreDb) return;
+    try { await firestoreDb.collection('feedback').doc(id).delete(); }
+    catch(e) {}
+  },
   // Upload payment screenshot to ImgBB cloud so it's a real web link
   async uploadScreenshot(fileOrDataUrl) {
     try {
