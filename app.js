@@ -401,8 +401,20 @@ function initCustomerAuth() {
     MokeCloud.onAuthChange((user) => {
       currentCustomer = user;
       updateAuthUI();
-      loadCustomerOrders();
+      if (user) loadCustomerOrders();
     });
+
+    // Handle return from mobile Google redirect sign-in
+    if (typeof MokeCloud.handleRedirectLogin === 'function') {
+      MokeCloud.handleRedirectLogin((user) => {
+        if (user) {
+          currentCustomer = user;
+          updateAuthUI();
+          loadCustomerOrders();
+          showToast('Signed in with Google!');
+        }
+      });
+    }
   } else {
     updateAuthUI();
   }
