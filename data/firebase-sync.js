@@ -22,6 +22,8 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
 }
 
 const firestoreDb = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+const firebaseAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
+const firebaseStorage = (typeof firebase !== 'undefined' && firebase.storage) ? firebase.storage() : null;
 
 window.MokeCloud = {
   COLLECTIONS: {
@@ -29,7 +31,9 @@ window.MokeCloud = {
     ORDERS: 'orders'
   },
 
-  // Listen to live catalog updates across all devices
+  // -------------------------------------------------------------
+  // PRODUCTS CATALOG SYNC
+  // -------------------------------------------------------------
   onProductsSync(callback) {
     if (!firestoreDb) {
       console.warn('Firestore DB not ready for sync.');
@@ -58,7 +62,6 @@ window.MokeCloud = {
     );
   },
 
-  // Save or update a product in the cloud
   async saveProduct(product) {
     if (!firestoreDb) {
       console.error('Firestore DB not available to save product.');
@@ -78,7 +81,6 @@ window.MokeCloud = {
     }
   },
 
-  // Delete a product from the cloud
   async deleteProduct(productId) {
     if (!firestoreDb) return false;
     try {
@@ -91,7 +93,6 @@ window.MokeCloud = {
     }
   },
 
-  // Seed default 30 pieces into Firebase if brand new
   async seedInitialProducts() {
     if (!firestoreDb || typeof productsData === 'undefined') return;
     try {
@@ -109,18 +110,211 @@ window.MokeCloud = {
     }
   },
 
-  // Save order directly into Cloud
+  // -------------------------------------------------------------
+  // ORDERS MANAGEMENT & LIVE VERIFICATION
+  // -------------------------------------------------------------
   async createCloudOrder(orderData) {
-    if (!firestoreDb) return null;
+    if (!firestoreDb) {
+      // Fallback to local storage if offline
+      const localId = 'ord_' + Date.now();
+      const localOrders = JSON.parse(localStorage.getItem('moke_db_orders') || '[]');
+      localOrders.unshift({ id: localId, ...orderData, createdAt: new Date().toISOString() });
+      localStorage.setItem('moke_db_orders', JSON.stringify(localOrders));
+      return localId;
+    }
     try {
-      const docRef = await firestoreDb.collection(this.COLLECTIONS.ORDERS).add({
+      const payload = {
         ...orderData,
+        status: orderData.status || 'pending',
+        statusNote: orderData.statusNote || 'Pending verification by Moke Studio.',
         createdAt: new Date().toISOString()
-      });
+      };
+      const docRef = await firestoreDb.collection(this.COLLECTIONS.ORDERS).add(payload);
+      console.log('✅ Order placed in Firestore:', docRef.id);
       return docRef.id;
     } catch (e) {
       console.error('Error saving order to cloud:', e);
       return null;
+    }
+  },
+
+  // Listen to ALL orders (for Builder / Admin panel)
+  onOrdersSync(callback) {
+    if (!firestoreDb) return;
+    return firestoreDb.collection(this.COLLECTIONS.ORDERS)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        (snapshot) => {
+          const orders = [];
+          snapshot.forEach(doc => {
+            orders.push({ id: doc.id, ...doc.data() });
+          });
+          if (typeof callback === 'function') callback(orders);
+        },
+        (error) => {
+          console.warn('Orders live sync subscription note:', error);
+          // If indexing is needed or error, try unsorted
+          firestoreDb.collection(this.COLLECTIONS.ORDERS).onSnapshot(s => {
+            const list = [];
+            s.forEach(d => list.push({ id: d.id, ...d.data() }));
+            list.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            if (typeof callback === 'function') callback(list);
+          });
+        }
+      );
+  },
+
+  // Update order status (Approve / Reject / Pending)
+  async updateOrderStatus(orderId, status, note = '') {
+    if (!firestoreDb) return false;
+    try {
+      await firestoreDb.collection(this.COLLECTIONS.ORDERS).doc(orderId).update({
+        status: status, // 'pending', 'approved', 'rejected'
+        statusNote: note || (status === 'approved' ? 'Order approved! We will contact you soon.' : (status === 'rejected' ? 'Payment screenshot rejected or invalid.' : 'Pending review.')),
+        updatedAt: new Date().toISOString()
+      });
+      console.log(`✅ Order ${orderId} updated to ${status}`);
+      return true;
+    } catch (e) {
+      console.error('Error updating order status:', e);
+      return false;
+    }
+  },
+
+  // Delete an order
+  async deleteOrder(orderId) {
+    if (!firestoreDb) return false;
+    try {
+      await firestoreDb.collection(this.COLLECTIONS.ORDERS).doc(orderId).delete();
+      return true;
+    } catch (e) {
+      console.error('Error deleting order:', e);
+      return false;
+    }
+  },
+
+  // -------------------------------------------------------------
+  // CUSTOMER AUTHENTICATION (Firebase Auth)
+  // -------------------------------------------------------------
+  async signUp(email, password, displayName = '') {
+    if (!firebaseAuth) throw new Error('Firebase Auth is not available.');
+    const userCredential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+    if (displayName && userCredential.user) {
+      await userCredential.user.updateProfile({ displayName: displayName });
+    }
+    return userCredential.user;
+  },
+
+  async signIn(email, password) {
+    if (!firebaseAuth) throw new Error('Firebase Auth is not available.');
+    const userCredential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+    return userCredential.user;
+  },
+
+  async signInWithGoogle() {
+    if (!firebaseAuth) throw new Error('Firebase Auth is not available.');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await firebaseAuth.signInWithPopup(provider);
+    return result.user;
+  },
+
+  async sendPasswordReset(email) {
+    if (!firebaseAuth) throw new Error('Firebase Auth is not available.');
+    await firebaseAuth.sendPasswordResetEmail(email);
+    return true;
+  },
+
+  async signOut() {
+    if (!firebaseAuth) return;
+    await firebaseAuth.signOut();
+  },
+
+  onAuthChange(callback) {
+    if (!firebaseAuth) return;
+    return firebaseAuth.onAuthStateChanged(user => {
+      if (typeof callback === 'function') callback(user);
+    });
+  },
+
+  getCurrentUser() {
+    return firebaseAuth ? firebaseAuth.currentUser : null;
+  },
+
+  // -------------------------------------------------------------
+  // CLOUD STORAGE (3D .glb & Image Uploads)
+  // -------------------------------------------------------------
+  async upload3DModel(file, onProgress) {
+    if (!file) throw new Error('No file provided');
+    
+    // First try Firebase Storage if available
+    if (firebaseStorage) {
+      try {
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const storagePath = `models/${Date.now()}_${sanitizedName}`;
+        const storageRef = firebaseStorage.ref().child(storagePath);
+        
+        const uploadTask = storageRef.put(file, { contentType: 'model/gltf-binary' });
+        
+        return await new Promise((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+              if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
+                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                onProgress(percent);
+              }
+            },
+            (error) => {
+              console.warn('Firebase Storage upload warning:', error);
+              reject(error);
+            },
+            async () => {
+              try {
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                resolve(downloadURL);
+              } catch (err) {
+                reject(err);
+              }
+            }
+          );
+        });
+      } catch (err) {
+        console.warn('Firebase Storage upload failed, attempting fallback...', err);
+      }
+    }
+    
+    // Fallback: Read as base64 data URL for smaller files or throw descriptive error
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(new Error('Failed to read file locally'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  // Upload payment screenshot to ImgBB cloud so it's a real web link
+  async uploadScreenshot(fileOrDataUrl) {
+    try {
+      let base64Data = fileOrDataUrl;
+      if (typeof fileOrDataUrl === 'string' && fileOrDataUrl.includes('base64,')) {
+        base64Data = fileOrDataUrl.split('base64,')[1];
+      }
+      
+      const formData = new FormData();
+      formData.append('image', base64Data);
+
+      const res = await fetch('https://api.imgbb.com/1/upload?key=2d0c2e30fa4fa03a83f1248455fa980f', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data && data.success && data.data && data.data.url) {
+        return data.data.url;
+      }
+      return typeof fileOrDataUrl === 'string' ? fileOrDataUrl : null;
+    } catch (err) {
+      console.warn('Screenshot upload note, using inline representation:', err);
+      return typeof fileOrDataUrl === 'string' ? fileOrDataUrl : null;
     }
   }
 };
