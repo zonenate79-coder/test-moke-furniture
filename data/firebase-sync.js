@@ -214,8 +214,48 @@ window.MokeCloud = {
   async signInWithGoogle() {
     if (!firebaseAuth) throw new Error('Firebase Auth is not available.');
     const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await firebaseAuth.signInWithPopup(provider);
-    return result.user;
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Check if user is on mobile phone / tablet
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+
+    if (isMobile) {
+      // Direct single-tab redirect for phone (prevents about:blank and extra tabs)
+      await firebaseAuth.signInWithRedirect(provider);
+      return null;
+    }
+
+    try {
+      const result = await firebaseAuth.signInWithPopup(provider);
+      return result.user;
+    } catch (err) {
+      if (err.code === 'auth/configuration-not-found') {
+        throw new Error('Google Sign-In is not enabled yet in your Firebase project. Please enable Google in Firebase Console -> Authentication -> Sign-in method.');
+      }
+      if (err.code === 'auth/unauthorized-domain') {
+        throw new Error('This domain is not authorized in Firebase. Please add zonenate79-coder.github.io in Firebase Console -> Authentication -> Settings -> Authorized domains.');
+      }
+      if (err.code === 'auth/popup-blocked') {
+        // Fallback to single-tab redirect if browser blocked popup
+        await firebaseAuth.signInWithRedirect(provider);
+        return null;
+      }
+      throw err;
+    }
+  },
+
+  initRedirectHandler() {
+    if (firebaseAuth && typeof firebaseAuth.getRedirectResult === 'function') {
+      firebaseAuth.getRedirectResult().then(result => {
+        if (result && result.user) {
+          console.log('✅ Logged in via Google redirect:', result.user.email);
+        }
+      }).catch(err => {
+        if (err && err.code && err.code !== 'auth/popup-closed-by-user') {
+          console.error('Redirect sign-in error:', err);
+        }
+      });
+    }
   },
 
   async sendPasswordReset(email) {
@@ -321,3 +361,6 @@ window.MokeCloud = {
 
 // Ensure global accessibility across all contexts
 var MokeCloud = window.MokeCloud;
+if (window.MokeCloud && typeof window.MokeCloud.initRedirectHandler === 'function') {
+  window.MokeCloud.initRedirectHandler();
+}
