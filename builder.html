@@ -38,6 +38,79 @@
       transform: scale(1.01);
     }
   </style>
+
+  <script>
+    // Admin Security Credentials
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = '12345678';
+
+    function checkAdminAuth() {
+      const isAuth = sessionStorage.getItem('moke_admin_auth') === 'true';
+      const overlay = document.getElementById('admin-login-overlay');
+      const studio = document.getElementById('studio-wrapper');
+
+      if (isAuth) {
+        if (overlay) overlay.style.display = 'none';
+        if (studio) {
+          studio.classList.remove('hidden');
+          studio.style.display = 'block';
+        }
+      } else {
+        if (overlay) overlay.style.display = 'flex';
+        if (studio) {
+          studio.classList.add('hidden');
+          studio.style.display = 'none';
+        }
+      }
+    }
+
+    function handleAdminLogin(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const uEl = document.getElementById('admin-username');
+      const pEl = document.getElementById('admin-password');
+      const err = document.getElementById('admin-login-error');
+
+      const u = (uEl ? uEl.value : '').trim();
+      const p = (pEl ? pEl.value : '').trim();
+
+      // Check password: 12345678
+      if (p === ADMIN_PASS && (u === ADMIN_USER || u === '' || u.toLowerCase() === 'admin')) {
+        sessionStorage.setItem('moke_admin_auth', 'true');
+        if (err) err.style.display = 'none';
+        checkAdminAuth();
+        // Initialize studio after login (DOMContentLoaded already fired, so call directly)
+        setTimeout(() => {
+          if (typeof window.initStudio === 'function') window.initStudio();
+          if (typeof window.initOrdersCloudSync === 'function') window.initOrdersCloudSync();
+          if (typeof window.updateDatabaseStats === 'function') window.updateDatabaseStats();
+          if (window.lucide) lucide.createIcons();
+        }, 50);
+      } else {
+        if (err) {
+          err.style.display = 'flex';
+          err.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i> <span>Incorrect password. Please try again.</span>';
+          if (window.lucide) lucide.createIcons();
+        }
+        if (pEl) {
+          pEl.value = '';
+          pEl.focus();
+        }
+      }
+      return false;
+    }
+
+    function lockStudio() {
+      sessionStorage.removeItem('moke_admin_auth');
+      checkAdminAuth();
+      const pInput = document.getElementById('admin-password');
+      if (pInput) pInput.value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAdminAuth);
+  </script>
 </head>
 <body class="bg-stone-100 text-stone-900 font-sans min-h-screen">
 
@@ -57,47 +130,41 @@
         STUDIO ADMIN ACCESS
       </span>
 
-      <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4 text-left">
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event); return false;" class="space-y-4 text-left">
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Username</label>
           <input 
             type="text" 
             id="admin-username" 
-            required 
             autocomplete="username"
             placeholder="admin" 
+            value="admin"
             class="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-stone-900" 
           />
         </div>
 
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Password</label>
-          <div class="relative">
+          <div>
             <input 
               type="password" 
               id="admin-password" 
-              required 
-              autocomplete="current-password"
+              autocomplete="off"
               placeholder="••••••••" 
-              class="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 pr-10" 
+              onkeydown="if(event.key === 'Enter'){ handleAdminLogin(event); }"
+              class="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-stone-900" 
             />
-            <button 
-              type="button" 
-              onclick="togglePasswordVisibility()" 
-              class="absolute right-3 top-2.5 text-stone-400 hover:text-stone-700" 
-              aria-label="Toggle password visibility">
-              <i id="pwd-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
-            </button>
           </div>
         </div>
 
-        <div id="admin-login-error" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center gap-1.5 font-medium">
+        <div id="admin-login-error" style="display: none;" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 items-center gap-1.5 font-medium">
           <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-          <span>Incorrect username or password.</span>
+          <span>Incorrect password. Please try again.</span>
         </div>
 
         <button 
-          type="submit" 
+          type="button" 
+          onclick="handleAdminLogin(event)"
           class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-2">
           <i data-lucide="unlock" class="w-4 h-4"></i> Unlock Studio
         </button>
@@ -128,17 +195,12 @@
         <span id="product-stats" class="text-xs text-stone-500 font-mono bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-200">
           Loading...
         </span>
-        <button onclick="openAISettingsModal()" id="ai-header-btn" class="px-3.5 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span id="ai-header-btn-text">✨ AI Setup</span>
+        <button onclick="openDatabaseModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow relative">
+          <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i> Orders (<span id="db-orders-badge">0</span>)
+          <span id="pending-alert-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping"></span>
         </button>
-        <button onclick="openDatabaseModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
-          <i data-lucide="database" class="w-3.5 h-3.5"></i> Orders DB (<span id="db-orders-badge">0</span>)
-        </button>
-        <button onclick="exportProductsJS()" class="px-3.5 py-2 bg-white border border-stone-300 hover:bg-stone-50 rounded-xl text-xs font-medium text-stone-700 transition flex items-center gap-1.5 shadow-sm">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i> Export JS
-        </button>
-        <button onclick="resetFactory()" class="px-3 py-2 text-stone-500 hover:text-red-700 text-xs font-medium transition" title="Reset to original 30 pieces">
-          Reset Default
+        <button onclick="resetFactory()" class="px-3.5 py-2 bg-white border border-stone-300 hover:bg-stone-50 rounded-xl text-xs font-medium text-stone-700 transition flex items-center gap-1.5 shadow-sm" title="Reset to original 30 pieces">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Reset Default 30
         </button>
         <button onclick="lockStudio()" class="px-3 py-2 text-stone-500 hover:text-stone-900 border border-stone-200 bg-white rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm" title="Lock Studio">
           <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
@@ -148,10 +210,26 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Mobile Quick Navigation Tabs -->
+    <div class="lg:hidden flex items-center justify-between gap-1.5 mb-6 bg-stone-100 p-1.5 rounded-2xl sticky top-20 z-30 shadow-sm border border-stone-200">
+      <a href="#editor-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-stone-900 text-white shadow-sm transition">
+        ✏️ Piece
+      </a>
+      <a href="#preview-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl text-stone-700 hover:bg-white transition">
+        👁️ Preview
+      </a>
+      <a href="#inventory-section" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl text-stone-700 hover:bg-white transition">
+        📦 Catalog
+      </a>
+      <button onclick="openDatabaseModal()" class="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition flex items-center justify-center gap-1 font-bold">
+        📋 Orders (<span id="mobile-orders-badge">0</span>)
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
       <!-- LEFT COLUMN: Product Editor Form (7 cols) -->
-      <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
+      <div id="editor-section" class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
         <div class="flex items-center justify-between pb-4 mb-6 border-b border-stone-100">
           <div>
             <h2 id="form-heading" class="font-serif text-2xl text-stone-900">Add New Furniture Piece</h2>
@@ -219,7 +297,7 @@
           <!-- Price & Discount -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="prod-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Price ($ USD) *</label>
+              <label for="prod-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Price (Birr ETB) *</label>
               <input 
                 id="prod-price" 
                 type="number" 
@@ -231,7 +309,7 @@
               />
             </div>
             <div>
-              <label for="prod-orig-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Original Price ($) (Optional)</label>
+              <label for="prod-orig-price" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">Original Price (Birr) Optional</label>
               <input 
                 id="prod-orig-price" 
                 type="number" 
@@ -273,18 +351,6 @@
               </div>
             </div>
 
-            <!-- AI Auto-Detect Feedback Bar -->
-            <div id="ai-detect-status" class="hidden mt-2 p-3 rounded-xl border transition-all text-xs flex items-center justify-between shadow-sm">
-              <div class="flex items-center gap-2">
-                <span id="ai-spinner" class="animate-spin text-amber-600 hidden">✦</span>
-                <span id="ai-status-icon">✨</span>
-                <span id="ai-status-text" class="font-medium text-stone-800">AI is analyzing photo...</span>
-              </div>
-              <button type="button" onclick="triggerManualAI()" id="ai-retry-btn" class="hidden text-[11px] underline font-semibold text-amber-900 hover:text-amber-950">
-                Re-analyze
-              </button>
-            </div>
-
             <!-- Image Link & Actions -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2">
               <input 
@@ -305,8 +371,75 @@
             </div>
           </div>
 
-          <!-- 3D MODEL SECTION WITH DRAG & DROP -->
-          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+          <!-- ✨ FINISH & UPHOLSTERY SELECTOR (replaces AI) -->
+          <div class="p-5 rounded-2xl bg-stone-50 border border-stone-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-xs uppercase tracking-wider font-bold text-stone-800 flex items-center gap-1.5">
+                <i data-lucide="palette" class="w-4 h-4 text-stone-600"></i> Finish &amp; Upholstery
+              </label>
+              <span class="text-[10px] text-stone-400">Auto-fills material &amp; colors</span>
+            </div>
+
+            <!-- Frame Finish Chips -->
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-stone-500 mb-2">Frame Finish</p>
+              <div class="flex flex-wrap gap-1.5" id="finish-chips">
+                <button type="button" onclick="selectFinish('Natural Oak','#C8A97E')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Natural Oak</button>
+                <button type="button" onclick="selectFinish('Walnut','#5C3D1E')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Walnut</button>
+                <button type="button" onclick="selectFinish('Black Ash','#1A1A1A')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Black Ash</button>
+                <button type="button" onclick="selectFinish('Brushed Brass','#B5922C')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Brushed Brass</button>
+                <button type="button" onclick="selectFinish('Travertine','#D4C5A9')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Travertine</button>
+                <button type="button" onclick="selectFinish('Marble','#E8E0D5')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Marble</button>
+                <button type="button" onclick="selectFinish('custom-finish','#888888')" class="finish-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">✏️ Custom</button>
+              </div>
+              <input id="custom-finish-input" type="text" placeholder="Enter custom finish name..." class="hidden mt-2 w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900" oninput="applyCustomFinish(this.value)" />
+            </div>
+
+            <!-- Upholstery Chips -->
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-stone-500 mb-2">Upholstery</p>
+              <div class="flex flex-wrap gap-1.5" id="upholstery-chips">
+                <button type="button" onclick="selectUpholstery('Bouclé','#F2EDE4')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Bouclé</button>
+                <button type="button" onclick="selectUpholstery('Belgian Linen','#D9CDB9')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Belgian Linen</button>
+                <button type="button" onclick="selectUpholstery('Full-Grain Leather','#8B5E3C')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Full-Grain Leather</button>
+                <button type="button" onclick="selectUpholstery('Velvet','#6B5B73')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Velvet</button>
+                <button type="button" onclick="selectUpholstery('Paper Cord','#C9B88A')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">Paper Cord</button>
+                <button type="button" onclick="selectUpholstery('None — Solid Wood','#C8A97E')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">None — Solid Wood</button>
+                <button type="button" onclick="selectUpholstery('custom-upholstery','#888888')" class="upholstery-chip px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 transition">✏️ Custom</button>
+              </div>
+              <input id="custom-upholstery-input" type="text" placeholder="Enter custom upholstery name..." class="hidden mt-2 w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900" oninput="applyCustomUpholstery(this.value)" />
+            </div>
+
+            <!-- Color Pickers -->
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-stone-500 mb-2">Color Swatches</p>
+              <div class="flex items-center gap-4">
+                <div class="flex flex-col items-center gap-1">
+                  <label class="text-[10px] text-stone-500 font-medium">Primary</label>
+                  <div class="relative">
+                    <input type="color" id="color-picker-1" value="#D4B996" class="w-10 h-10 rounded-full cursor-pointer border-2 border-stone-300 p-0.5" oninput="updateColorSwatches()" />
+                  </div>
+                  <input type="text" id="color-name-1" value="Natural" placeholder="Color name" class="w-20 text-center text-[10px] border border-stone-200 rounded-lg px-1 py-0.5 bg-white focus:outline-none" oninput="updateColorSwatches()" />
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <label class="text-[10px] text-stone-500 font-medium">Accent</label>
+                  <div class="relative">
+                    <input type="color" id="color-picker-2" value="#262626" class="w-10 h-10 rounded-full cursor-pointer border-2 border-stone-300 p-0.5" oninput="updateColorSwatches()" />
+                  </div>
+                  <input type="text" id="color-name-2" value="Charcoal" placeholder="Color name" class="w-20 text-center text-[10px] border border-stone-200 rounded-lg px-1 py-0.5 bg-white focus:outline-none" oninput="updateColorSwatches()" />
+                </div>
+                <div class="flex flex-col items-center gap-1 ml-4">
+                  <label class="text-[10px] text-stone-500 font-medium">Preview</label>
+                  <div class="flex gap-1.5">
+                    <div id="swatch-preview-1" class="w-8 h-8 rounded-full border-2 border-stone-300 shadow-sm" style="background:#D4B996"></div>
+                    <div id="swatch-preview-2" class="w-8 h-8 rounded-full border-2 border-stone-300 shadow-sm" style="background:#262626"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D MODEL SECTION WITH DRAG & DROP -->          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
             <div class="flex items-center justify-between">
               <label class="text-xs uppercase tracking-wider font-bold text-amber-950 flex items-center gap-1.5">
                 <i data-lucide="box" class="w-4 h-4 text-amber-800"></i> Interactive 3D Model (.GLB)
@@ -330,22 +463,25 @@
                   <i data-lucide="box" class="w-5 h-5"></i>
                 </div>
                 <p class="text-xs font-semibold text-amber-950">Drag & drop your 3D model (.glb file) here</p>
-                <p class="text-[11px] text-amber-800/80">or click to browse from your computer folder</p>
+                <p class="text-[11px] text-amber-800/80">Uploads to Cloud Storage automatically so all customers see it</p>
                 <span id="model3d-filename-badge" class="hidden mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm"></span>
               </div>
             </div>
 
             <!-- Paste 3D URL & Sample Buttons -->
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <input 
                 id="prod-3d" 
                 type="text" 
-                placeholder="Or paste .glb link (https://.../model.glb)" 
-                class="w-full px-3 py-2 bg-white border border-amber-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
+                placeholder="Cloud .glb link (https://.../model.glb)" 
+                class="flex-1 min-w-[200px] px-3 py-2 bg-white border border-amber-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
                 oninput="updateLivePreview()"
               />
-              <button type="button" onclick="insertSample3D()" class="px-3 py-2 bg-amber-900 text-white rounded-xl text-xs font-medium whitespace-nowrap hover:bg-amber-950 transition shadow-sm">
-                Test Sample Chair
+              <button type="button" onclick="document.getElementById('model3d-file-input').click()" class="px-3 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-medium whitespace-nowrap transition shadow-sm flex items-center gap-1">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload / Replace 3D
+              </button>
+              <button type="button" onclick="insertSample3D()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium whitespace-nowrap transition">
+                Sample
               </button>
               <button type="button" onclick="clear3DModel()" class="px-2.5 py-2 text-stone-500 hover:text-red-700 text-xs font-medium transition" title="Remove 3D">
                 Clear
@@ -412,7 +548,7 @@
       </div>
 
       <!-- RIGHT COLUMN: Real-Time Live Preview (5 cols) -->
-      <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+      <div id="preview-section" class="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
         <div class="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
           <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
             <h3 class="font-serif text-lg text-stone-900">Live Card Preview</h3>
@@ -441,7 +577,7 @@
     </div>
 
     <!-- BOTTOM SECTION: Product Catalog Manager -->
-    <section class="mt-12 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
+    <section id="inventory-section" class="mt-12 bg-white p-6 sm:p-8 rounded-3xl border border-stone-200 shadow-sm">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-100">
         <div>
           <h2 class="font-serif text-2xl text-stone-900">Catalog Inventory</h2>
@@ -467,105 +603,40 @@
 
   <!-- Firebase Cloud SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="data/firebase-sync.js"></script>
 
   <script src="data/products.js"></script>
   <script src="data/db.js"></script>
   <script>
-    // Admin Security Credentials
-    const ADMIN_USER = 'admin';
-    const ADMIN_PASS = '12345678';
-
-    function checkAdminAuth() {
-      const isAuth = sessionStorage.getItem('moke_admin_auth') === 'true';
-      const overlay = document.getElementById('admin-login-overlay');
-      const studio = document.getElementById('studio-wrapper');
-
-      if (isAuth) {
-        if (overlay) overlay.classList.add('hidden');
-        if (studio) studio.classList.remove('hidden');
-      } else {
-        if (overlay) overlay.classList.remove('hidden');
-        if (studio) studio.classList.add('hidden');
-      }
-    }
-
-    function handleAdminLogin(e) {
-      e.preventDefault();
-      const u = document.getElementById('admin-username')?.value.trim();
-      const p = document.getElementById('admin-password')?.value;
-      const err = document.getElementById('admin-login-error');
-
-      if (u === ADMIN_USER && p === ADMIN_PASS) {
-        sessionStorage.setItem('moke_admin_auth', 'true');
-        if (err) err.classList.add('hidden');
-        checkAdminAuth();
-        if (window.lucide) lucide.createIcons();
-      } else {
-        if (err) err.classList.remove('hidden');
-        const pInput = document.getElementById('admin-password');
-        if (pInput) {
-          pInput.value = '';
-          pInput.focus();
-        }
-      }
-    }
-
-    function lockStudio() {
-      sessionStorage.removeItem('moke_admin_auth');
-      checkAdminAuth();
-      const pInput = document.getElementById('admin-password');
-      if (pInput) pInput.value = '';
-    }
-
-    function togglePasswordVisibility() {
-      const pInput = document.getElementById('admin-password');
-      const eyeIcon = document.getElementById('pwd-eye-icon');
-      if (!pInput) return;
-      if (pInput.type === 'password') {
-        pInput.type = 'text';
-        if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye-off');
-      } else {
-        pInput.type = 'password';
-        if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye');
-      }
-      if (window.lucide) lucide.createIcons();
-    }
-
     // State
     let catalog = [];
     let currentManagerFilter = 'all';
 
-    function initStudio() {
+    window.initStudio = function() {
       const saved = localStorage.getItem('moke_custom_products');
       if (saved) {
         try {
-          catalog = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            catalog = parsed;
+          } else {
+            catalog = typeof productsData !== 'undefined' ? [...productsData] : [];
+          }
         } catch (e) {
-          catalog = [...productsData];
+          catalog = typeof productsData !== 'undefined' ? [...productsData] : [];
         }
       } else {
-        catalog = [...productsData];
+        catalog = typeof productsData !== 'undefined' ? [...productsData] : [];
       }
 
       setupDragAndDrop();
       updateStats();
       renderInventory();
       updateLivePreview();
-      updateAIUI();
       if (window.lucide) lucide.createIcons();
-
-      // Auto-load AI key from Firebase Cloud across PC & Phone
-      if (typeof firestoreDb !== 'undefined' && firestoreDb) {
-        firestoreDb.collection('config').doc('ai_settings').get().then(doc => {
-          if (doc.exists && doc.data() && doc.data().apiKey && !getAIKey()) {
-            localStorage.setItem('moke_gemini_api_key', doc.data().apiKey);
-            updateAIUI();
-            console.log('⚡ Loaded AI key from Firebase Cloud for this device');
-          }
-        }).catch(err => console.warn('Cloud AI config note:', err));
-      }
 
       // Cloud live sync across PC and Phone
       if (window.MokeCloud && typeof MokeCloud.onProductsSync === 'function') {
@@ -578,6 +649,10 @@
           }
         });
       }
+    };
+
+    function initStudio() {
+      window.initStudio();
     }
 
     // Setup Drag and Drop events
@@ -631,357 +706,118 @@
     }
 
     // ==========================================
-    // GEMINI AI AUTO-DETECTION ENGINE
+    // FINISH & UPHOLSTERY SELECTION LOGIC
     // ==========================================
-    let currentAIData = null;
+    let currentFinish = '';
+    let currentUpholstery = '';
 
-    function getAIKey() {
-      return localStorage.getItem('moke_gemini_api_key') || '';
-    }
+    function selectFinish(name, colorHex) {
+      const input = document.getElementById('custom-finish-input');
+      const chips = document.querySelectorAll('.finish-chip');
+      chips.forEach(c => {
+        c.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
+        c.classList.add('bg-white', 'text-stone-700', 'border-stone-200');
+      });
 
-    function updateAIUI() {
-      const key = getAIKey();
-      const headerBtn = document.getElementById('ai-header-btn');
-      const headerText = document.getElementById('ai-header-btn-text');
-      const modalStatus = document.getElementById('ai-modal-status-badge');
-      const input = document.getElementById('gemini-api-key-input');
-
-      if (input && key) {
-        input.value = key;
-      }
-
-      if (key) {
-        if (headerBtn) {
-          headerBtn.className = 'px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow';
+      if (name === 'custom-finish') {
+        if (input) {
+          input.classList.remove('hidden');
+          input.focus();
         }
-        if (headerText) headerText.innerHTML = '✨ AI Active';
-        if (modalStatus) modalStatus.innerHTML = '<span class="text-emerald-700 font-medium">✅ Key is saved and active! Ready to auto-detect.</span>';
+        currentFinish = input ? input.value.trim() : '';
       } else {
-        if (headerBtn) {
-          headerBtn.className = 'px-3.5 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow';
+        if (input) input.classList.add('hidden');
+        currentFinish = name;
+        if (colorHex) {
+          const picker = document.getElementById('color-picker-1');
+          const nameInput = document.getElementById('color-name-1');
+          if (picker) picker.value = colorHex;
+          if (nameInput) nameInput.value = name;
+          updateColorSwatches();
         }
-        if (headerText) headerText.innerHTML = '✨ AI Setup';
-        if (modalStatus) modalStatus.innerHTML = '<span class="text-amber-800">⚠️ No key saved yet. Paste your Gemini key above.</span>';
       }
+
+      const activeBtn = Array.from(chips).find(c => c.textContent.trim().includes(name === 'custom-finish' ? 'Custom' : name));
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-stone-700', 'border-stone-200');
+        activeBtn.classList.add('bg-stone-900', 'text-white', 'border-stone-900');
+      }
+
+      syncMaterialField();
     }
 
-    function openAISettingsModal() {
-      updateAIUI();
-      const modal = document.getElementById('ai-modal');
-      if (modal) modal.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+    function applyCustomFinish(val) {
+      currentFinish = val.trim();
+      syncMaterialField();
     }
 
-    function closeAISettingsModal() {
-      const modal = document.getElementById('ai-modal');
-      if (modal) modal.classList.add('hidden');
-    }
+    function selectUpholstery(name, colorHex) {
+      const input = document.getElementById('custom-upholstery-input');
+      const chips = document.querySelectorAll('.upholstery-chip');
+      chips.forEach(c => {
+        c.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
+        c.classList.add('bg-white', 'text-stone-700', 'border-stone-200');
+      });
 
-    function toggleAIKeyVisibility() {
-      const input = document.getElementById('gemini-api-key-input');
-      const icon = document.getElementById('ai-key-eye-icon');
-      if (!input) return;
-      if (input.type === 'password') {
-        input.type = 'text';
-        if (icon) icon.setAttribute('data-lucide', 'eye-off');
+      if (name === 'custom-upholstery') {
+        if (input) {
+          input.classList.remove('hidden');
+          input.focus();
+        }
+        currentUpholstery = input ? input.value.trim() : '';
       } else {
-        input.type = 'password';
-        if (icon) icon.setAttribute('data-lucide', 'eye');
+        if (input) input.classList.add('hidden');
+        currentUpholstery = name;
+        if (colorHex) {
+          const picker = document.getElementById('color-picker-2');
+          const nameInput = document.getElementById('color-name-2');
+          if (picker) picker.value = colorHex;
+          if (nameInput) nameInput.value = name.replace('None — ', '');
+          updateColorSwatches();
+        }
       }
-      if (window.lucide) lucide.createIcons();
+
+      const activeBtn = Array.from(chips).find(c => c.textContent.trim().includes(name === 'custom-upholstery' ? 'Custom' : name));
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-stone-700', 'border-stone-200');
+        activeBtn.classList.add('bg-stone-900', 'text-white', 'border-stone-900');
+      }
+
+      const tagSelect = document.getElementById('prod-material-tag');
+      if (tagSelect) {
+        const lower = name.toLowerCase();
+        if (lower.includes('bouclé') || lower.includes('boucle')) tagSelect.value = 'boucle';
+        else if (lower.includes('leather')) tagSelect.value = 'leather';
+        else if (lower.includes('linen')) tagSelect.value = 'linen';
+        else if (lower.includes('velvet')) tagSelect.value = 'velvet';
+        else if (lower.includes('wood')) tagSelect.value = 'wood';
+      }
+
+      syncMaterialField();
     }
 
-    function saveAIKey() {
-      const input = document.getElementById('gemini-api-key-input');
-      const val = input ? input.value.trim() : '';
-      if (!val) {
-        alert('Please paste a valid Gemini API key.');
-        return;
-      }
-      localStorage.setItem('moke_gemini_api_key', val);
-      updateAIUI();
-
-      // Sync to Firebase Cloud so Phone automatically receives the key
-      if (typeof firestoreDb !== 'undefined' && firestoreDb) {
-        firestoreDb.collection('config').doc('ai_settings').set({ apiKey: val }, { merge: true })
-          .then(() => console.log('☁️ AI key synced to Firebase for phone and PC'))
-          .catch(e => console.warn('Could not sync key to Firebase:', e));
-      }
-
-      alert('✨ Gemini AI key saved! Now whenever you drop a photo, details will auto-fill across both PC and Phone.');
-      closeAISettingsModal();
+    function applyCustomUpholstery(val) {
+      currentUpholstery = val.trim();
+      syncMaterialField();
     }
 
-    function clearAIKey() {
-      if (confirm('Remove saved Gemini API key?')) {
-        localStorage.removeItem('moke_gemini_api_key');
-        localStorage.removeItem('moke_gemini_model');
-        localStorage.removeItem('moke_gemini_apiversion');
-        const input = document.getElementById('gemini-api-key-input');
-        if (input) input.value = '';
-        updateAIUI();
-      }
-    }
-
-    async function getWorkingGeminiModel(key) {
-      for (const ver of ['v1beta', 'v1']) {
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(key)}`, {
-            headers: { 'x-goog-api-key': key }
-          });
-          const data = await res.json();
-          if (data && data.models && Array.isArray(data.models)) {
-            const contentModels = data.models.filter(m => 
-              m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
-            );
-            if (contentModels.length > 0) {
-              const picked = contentModels.find(m => m.name.includes('flash')) 
-                          || contentModels.find(m => m.name.includes('gemini')) 
-                          || contentModels[0];
-              const cleanModel = picked.name.replace(/^models\//, '');
-              console.log(`✨ Found working Gemini model via ${ver}:`, cleanModel);
-              return { model: cleanModel, version: ver };
-            }
-          }
-        } catch (e) {
-          console.warn(`Query ${ver} models error:`, e);
-        }
-      }
-      return { model: 'gemini-flash-latest', version: 'v1beta' };
-    }
-
-    async function testAIKeyConnection() {
-      const key = (document.getElementById('gemini-api-key-input')?.value || getAIKey()).trim();
-      if (!key) {
-        alert('Please paste your key first.');
-        return;
-      }
-      const testBtn = document.getElementById('ai-test-btn');
-      if (testBtn) testBtn.textContent = 'Testing...';
-
-      try {
-        const modelInfo = await getWorkingGeminiModel(key);
-        
-        const candidates = [
-          { model: 'gemini-flash-latest', version: 'v1beta' },
-          { model: modelInfo.model, version: modelInfo.version },
-          { model: 'gemini-2.0-flash-exp', version: 'v1beta' },
-          { model: 'gemini-2.0-flash', version: 'v1beta' },
-          { model: 'gemini-1.5-flash-latest', version: 'v1beta' },
-          { model: 'gemini-1.5-flash', version: 'v1beta' },
-          { model: 'gemini-pro-latest', version: 'v1beta' }
-        ];
-
-        let success = false;
-        let lastError = null;
-
-        for (const item of candidates) {
-          try {
-            const endpoint = key.startsWith('AQ.')
-              ? `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent`
-              : `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`;
-
-            const res = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'x-goog-api-key': key
-              },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: 'Respond with {"status": "ok"}' }] }]
-              })
-            });
-            const data = await res.json();
-            if (data && data.candidates && data.candidates[0]) {
-              localStorage.setItem('moke_gemini_model', item.model);
-              localStorage.setItem('moke_gemini_apiversion', item.version);
-              localStorage.setItem('moke_gemini_api_key', key);
-              updateAIUI();
-              alert(`✅ Success! Connected to Google AI using ${item.model}. Your key is ready!`);
-              success = true;
-              break;
-            } else if (data.error) {
-              lastError = data.error.message || JSON.stringify(data.error);
-            }
-          } catch (err) {
-            lastError = err.message;
-          }
-        }
-
-        if (!success) {
-          alert('❌ Connection failed: ' + (lastError || 'Unknown error'));
-        }
-      } catch (e) {
-        alert('Error connecting to Gemini API: ' + e.message);
-      } finally {
-        if (testBtn) testBtn.textContent = 'Test Key';
-      }
-    }
-
-    async function analyzePhotoWithAI(base64Data, mimeType, fileName) {
-      const key = getAIKey();
-      const statusBox = document.getElementById('ai-detect-status');
-      const statusText = document.getElementById('ai-status-text');
-      const spinner = document.getElementById('ai-spinner');
-      const retryBtn = document.getElementById('ai-retry-btn');
-
-      if (!statusBox || !statusText) return;
-
-      if (!key) {
-        statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-200 bg-amber-50 text-xs flex items-center justify-between shadow-sm';
-        statusText.innerHTML = `<span>💡 <strong class="text-amber-950">AI Auto-Detect:</strong> Add your free Google AI Key to auto-fill title, materials & colors! <button type="button" onclick="openAISettingsModal()" class="underline font-bold text-amber-900 ml-1">Setup Key</button></span>`;
-        if (spinner) spinner.classList.add('hidden');
-        if (retryBtn) retryBtn.classList.add('hidden');
-        statusBox.classList.remove('hidden');
-        return;
-      }
-
-      statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 text-xs flex items-center justify-between shadow-sm animate-pulse';
-      statusText.innerHTML = `<span class="text-amber-950 font-medium">✨ <strong>Gemini Vision:</strong> Analyzing photo (detecting architectural name, finish, upholstery & swatches)...</span>`;
-      if (spinner) spinner.classList.remove('hidden');
-      if (retryBtn) retryBtn.classList.add('hidden');
-      statusBox.classList.remove('hidden');
-
-      const promptText = `You are a world-class luxury minimalist furniture designer for MOKE Furniture (similar to Herman Miller, Restoration Hardware, and Japandi minimalism).
-Analyze this furniture photo in detail and return ONLY a valid JSON object (no markdown code blocks, no backticks, no other text) with these exact keys:
-{
-  "name": "An elegant, architectural furniture title (e.g. 'Kyoto Minimalist Armchair', 'Oslo Curved Bouclé Lounge', 'Kanso Low Oak Dining Table')",
-  "category": "sofas" or "chairs" or "tables",
-  "tag": "Bestseller" or "Curator's Choice" or "New Arrival" or "Signature" or "Limited Edition",
-  "price": suggested luxury retail price as a number (e.g. 1450),
-  "originalPrice": higher MSRP value as a number (e.g. 1750),
-  "finish": "Wood, stone, or metal frame material and finish (e.g. 'Natural White Oak', 'Smoked Walnut', 'Black Ebonized Ash', 'Brushed Brass', 'Honed Travertine')",
-  "upholstery": "Cushion or wrap fabric (e.g. 'Warm Ivory Textured Bouclé', 'Oatmeal Belgian Linen', 'Cognac Top-Grain Leather', or 'None / Solid Timber')",
-  "filterTag": "best matching single tag: 'boucle', 'wood', 'leather', 'linen', 'stone', or 'velvet'",
-  "dimensions": "Realistic luxury furniture dimensions W x D x H (e.g. '88 x 84 x 76 cm')",
-  "seatHeight": "Realistic seat height (e.g. '42 cm') or 'Standard'",
-  "colors": ["#HEX1", "#HEX2"],
-  "colorNames": ["Color 1 Name (e.g. Warm Ivory)", "Color 2 Name (e.g. Natural Oak)"],
-  "description": "A refined, poetic 2-sentence design description celebrating the architectural form, sustainable joinery, and comfort."
-}`;
-
-      const payload = {
-        contents: [
-          {
-            parts: [
-              { text: promptText },
-              {
-                inline_data: {
-                  mime_type: mimeType || 'image/jpeg',
-                  data: base64Data
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: 'application/json'
-        }
-      };
-
-      const savedM = localStorage.getItem('moke_gemini_model') || 'gemini-flash-latest';
-      const savedV = localStorage.getItem('moke_gemini_apiversion') || 'v1beta';
-
-      const modelsToTry = [
-        { model: savedM, version: savedV },
-        { model: 'gemini-flash-latest', version: 'v1beta' },
-        { model: 'gemini-2.0-flash-exp', version: 'v1beta' },
-        { model: 'gemini-2.0-flash', version: 'v1beta' },
-        { model: 'gemini-1.5-flash-latest', version: 'v1beta' },
-        { model: 'gemini-1.5-flash', version: 'v1beta' },
-        { model: 'gemini-pro-latest', version: 'v1beta' }
-      ];
-      let result = null;
-
-      for (const item of modelsToTry) {
-        try {
-          const endpoint = key.startsWith('AQ.')
-            ? `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent`
-            : `https://generativelanguage.googleapis.com/${item.version}/models/${item.model}:generateContent?key=${encodeURIComponent(key)}`;
-
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-goog-api-key': key
-            },
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json();
-          if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
-            result = data.candidates[0].content.parts[0].text;
-            localStorage.setItem('moke_gemini_model', item.model);
-            localStorage.setItem('moke_gemini_apiversion', item.version);
-            break;
-          }
-        } catch (err) {
-          console.warn(`Model ${item.model} attempt failed:`, err);
-        }
-      }
-
-      if (spinner) spinner.classList.add('hidden');
-      statusBox.classList.remove('animate-pulse');
-
-      if (!result) {
-        statusBox.className = 'mt-2 p-3 rounded-xl border border-red-200 bg-red-50 text-xs flex items-center justify-between shadow-sm';
-        statusText.innerHTML = `<span class="text-red-800">⚠️ Could not auto-detect photo details. Check your API key.</span>`;
-        if (retryBtn) retryBtn.classList.remove('hidden');
-        return;
-      }
-
-      try {
-        let cleanStr = result.trim();
-        if (cleanStr.startsWith('```json')) cleanStr = cleanStr.replace(/```json/i, '');
-        if (cleanStr.startsWith('```')) cleanStr = cleanStr.replace(/```/g, '');
-        cleanStr = cleanStr.trim();
-        const parsed = JSON.parse(cleanStr);
-        currentAIData = parsed;
-
-        if (parsed.name) document.getElementById('prod-name').value = parsed.name;
-        if (parsed.category) {
-          const radio = document.querySelector(`input[name="category"][value="${parsed.category}"]`);
-          if (radio) radio.checked = true;
-        }
-        if (parsed.tag) document.getElementById('prod-tag').value = parsed.tag;
-        if (parsed.price && !document.getElementById('prod-price').value) {
-          document.getElementById('prod-price').value = parsed.price;
-        }
-        if (parsed.originalPrice && !document.getElementById('prod-orig-price').value) {
-          document.getElementById('prod-orig-price').value = parsed.originalPrice;
-        }
-        if (parsed.filterTag) document.getElementById('prod-material-tag').value = parsed.filterTag;
-
-        const materialSummary = [parsed.upholstery, parsed.finish].filter(Boolean).join(' & ');
-        if (materialSummary) {
-          document.getElementById('prod-material').value = materialSummary;
-        }
-        if (parsed.dimensions) document.getElementById('prod-dimensions').value = parsed.dimensions;
-        if (parsed.seatHeight) document.getElementById('prod-seat').value = parsed.seatHeight;
-
+    function syncMaterialField() {
+      const parts = [currentUpholstery, currentFinish].filter(Boolean);
+      if (parts.length > 0) {
+        const matInput = document.getElementById('prod-material');
+        if (matInput) matInput.value = parts.join(' & ');
         updateLivePreview();
-
-        statusBox.className = 'mt-2 p-3 rounded-xl border border-emerald-300 bg-emerald-50 text-xs flex items-center justify-between shadow-sm';
-        statusText.innerHTML = `<span class="text-emerald-900">✨ <strong>AI Auto-Filled:</strong> "${parsed.name}" • <em>${parsed.upholstery || 'Upholstery'}</em> & <em>${parsed.finish || 'Finish'}</em></span>`;
-        if (retryBtn) retryBtn.classList.remove('hidden');
-      } catch (parseErr) {
-        console.error('Error parsing AI response:', parseErr, result);
-        statusBox.className = 'mt-2 p-3 rounded-xl border border-amber-200 bg-amber-50 text-xs flex items-center justify-between shadow-sm';
-        statusText.innerHTML = `<span class="text-amber-900">AI analyzed photo but returned custom formatting. Form updated.</span>`;
       }
     }
 
-    function triggerManualAI() {
-      if (lastDroppedPhoto) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const base64Data = e.target.result.split(',')[1];
-          analyzePhotoWithAI(base64Data, lastDroppedPhoto.type, lastDroppedPhoto.name);
-        };
-        reader.readAsDataURL(lastDroppedPhoto);
-      } else {
-        alert('Please drop or select a photo first.');
-      }
+    function updateColorSwatches() {
+      const p1 = document.getElementById('color-picker-1')?.value || '#D4B996';
+      const p2 = document.getElementById('color-picker-2')?.value || '#262626';
+      const s1 = document.getElementById('swatch-preview-1');
+      const s2 = document.getElementById('swatch-preview-2');
+      if (s1) s1.style.background = p1;
+      if (s2) s2.style.background = p2;
+      updateLivePreview();
     }
 
     let lastDroppedPhoto = null;
@@ -1005,13 +841,7 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
         badge.classList.remove('hidden');
         updateLivePreview();
 
-        // Trigger AI Auto-Detection
-        const base64Data = e.target.result.split(',')[1];
-        if (base64Data) {
-          analyzePhotoWithAI(base64Data, file.type, file.name);
-        }
-
-        // Also offer cloud upload if connected to internet
+        // Offer cloud upload if connected to internet
         if (navigator.onLine) {
           uploadPhotoToCloud(file);
         }
@@ -1070,30 +900,62 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       updateLivePreview();
     }
 
-    // Handle Dropped 3D GLB File
-    function handle3DFile(file) {
+    // Handle Dropped or Selected 3D GLB File (Uploads to Cloud Storage)
+    async function handle3DFile(file) {
       if (!file) return;
       if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
-        alert('Please drop a 3D model file ending in .glb or .gltf');
+        alert('Please select a 3D model file ending in .glb or .gltf');
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        document.getElementById('prod-3d').value = e.target.result;
-        const badge = document.getElementById('model3d-filename-badge');
-        badge.textContent = `✅ ${file.name} (${Math.round(file.size / 1024)} KB)`;
+      const badge = document.getElementById('model3d-filename-badge');
+      const input = document.getElementById('prod-3d');
+      if (badge) {
+        badge.className = 'mt-2 text-[11px] text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block animate-pulse';
+        badge.textContent = `⏳ Uploading ${file.name} to Cloud Storage...`;
         badge.classList.remove('hidden');
-        updateLivePreview();
-      };
-      reader.readAsDataURL(file);
+      }
+
+      try {
+        if (window.MokeCloud && typeof MokeCloud.upload3DModel === 'function') {
+          const cloudUrl = await MokeCloud.upload3DModel(file, (percent) => {
+            if (badge) badge.textContent = `⏳ Uploading 3D to Cloud (${percent}%)...`;
+          });
+          input.value = cloudUrl;
+          if (badge) {
+            badge.className = 'mt-2 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+            badge.textContent = `✅ 3D Cloud Ready: ${file.name}`;
+          }
+          updateLivePreview();
+        } else {
+          // Fallback to local data reader
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            input.value = e.target.result;
+            if (badge) {
+              badge.className = 'mt-2 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
+              badge.textContent = `✅ Attached: ${file.name}`;
+            }
+            updateLivePreview();
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (err) {
+        console.error('3D Upload Error:', err);
+        alert('Could not upload 3D file: ' + (err.message || err));
+        if (badge) badge.classList.add('hidden');
+      }
     }
 
     function clear3DModel() {
       document.getElementById('prod-3d').value = '';
       const badge = document.getElementById('model3d-filename-badge');
-      badge.textContent = '';
-      badge.classList.add('hidden');
+      if (badge) {
+        badge.textContent = '';
+        badge.classList.add('hidden');
+      }
+      const fileInput = document.getElementById('model3d-file-input');
+      if (fileInput) fileInput.value = '';
       updateLivePreview();
     }
 
@@ -1129,28 +991,71 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       renderInventory();
     }
 
+    function toggleProductVisibility(id) {
+      const p = catalog.find(x => x.id === id);
+      if (!p) return;
+      p.hidden = !p.hidden;
+      saveToStorage();
+      if (window.MokeCloud && typeof MokeCloud.saveProduct === 'function') {
+        MokeCloud.saveProduct(p);
+      }
+      renderInventory();
+    }
+
     function renderInventory() {
       const container = document.getElementById('inventory-grid');
+      if (!container) return;
+
+      // Ensure catalog has products from productsData if empty
+      if (!catalog || catalog.length === 0) {
+        if (typeof productsData !== 'undefined' && productsData.length > 0) {
+          catalog = [...productsData];
+          localStorage.setItem('moke_custom_products', JSON.stringify(catalog));
+          updateStats();
+        }
+      }
+
       const filtered = catalog.filter(p => currentManagerFilter === 'all' || p.category === currentManagerFilter);
 
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-stone-200">
+            <p class="text-sm font-serif text-stone-700 mb-2">No pieces found in "${currentManagerFilter}" category.</p>
+            <button onclick="setManagerFilter('all'); resetFactory();" class="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-semibold">Load Default 30 Pieces</button>
+          </div>
+        `;
+        return;
+      }
+
       container.innerHTML = filtered.map(item => `
-        <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200/80 flex flex-col justify-between gap-3 hover:border-stone-400 transition">
+        <div class="bg-stone-50 rounded-2xl p-4 border ${item.hidden ? 'border-dashed border-stone-300 opacity-70 bg-stone-100/80' : 'border-stone-200/80 hover:border-stone-400'} flex flex-col justify-between gap-3 transition">
           <div class="flex gap-3">
-            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover border border-stone-200 shrink-0" />
+            <div class="relative shrink-0">
+              <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover border border-stone-200 shrink-0" />
+              ${item.hidden ? '<span class="absolute inset-0 bg-stone-900/50 rounded-xl flex items-center justify-center text-white text-[9px] font-bold">HIDDEN</span>' : ''}
+            </div>
             <div class="flex-grow overflow-hidden">
               <div class="flex items-center justify-between gap-1 mb-0.5">
                 <span class="text-[9px] uppercase tracking-wider font-semibold text-stone-400">${item.category}</span>
-                ${item.model3d ? '<span class="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="box" class="w-2.5 h-2.5"></i> 3D</span>' : ''}
+                <div class="flex items-center gap-1">
+                  ${item.hidden ? '<span class="text-[9px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded">Hidden</span>' : '<span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">Live</span>'}
+                  ${item.model3d ? '<span class="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="box" class="w-2.5 h-2.5"></i> 3D</span>' : ''}
+                </div>
               </div>
               <h4 class="font-serif text-sm text-stone-900 line-clamp-1">${item.name}</h4>
-              <span class="text-xs font-semibold text-stone-900">$${item.price.toLocaleString()}</span>
+              <span class="text-xs font-semibold text-stone-900">${item.price.toLocaleString()} Birr</span>
             </div>
           </div>
 
           <div class="flex items-center justify-between pt-2 border-t border-stone-200/60 text-xs">
-            <button onclick="editProduct('${item.id}')" class="px-3 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg text-stone-800 font-medium transition flex items-center gap-1 shadow-sm">
-              <i data-lucide="edit-2" class="w-3 h-3"></i> Modify
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="editProduct('${item.id}')" class="px-2.5 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg text-stone-800 font-medium transition flex items-center gap-1 shadow-sm">
+                <i data-lucide="edit-2" class="w-3 h-3"></i> Edit
+              </button>
+              <button onclick="toggleProductVisibility('${item.id}')" class="px-2.5 py-1 ${item.hidden ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'} rounded-lg font-medium transition flex items-center gap-1 shadow-sm" title="${item.hidden ? 'Show on store' : 'Hide from store'}">
+                <i data-lucide="${item.hidden ? 'eye' : 'eye-off'}" class="w-3 h-3"></i> ${item.hidden ? 'Show' : 'Hide'}
+              </button>
+            </div>
             <button onclick="deleteProduct('${item.id}')" class="p-1.5 text-stone-400 hover:text-red-600 transition" title="Delete Piece">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
@@ -1185,6 +1090,24 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       document.getElementById('prod-image').value = p.image || '';
       document.getElementById('prod-3d').value = p.model3d || '';
 
+      if (p.colors && p.colors[0]) {
+        const picker1 = document.getElementById('color-picker-1');
+        if (picker1) picker1.value = p.colors[0];
+      }
+      if (p.colors && p.colors[1]) {
+        const picker2 = document.getElementById('color-picker-2');
+        if (picker2) picker2.value = p.colors[1];
+      }
+      if (p.colorNames && p.colorNames[0]) {
+        const name1 = document.getElementById('color-name-1');
+        if (name1) name1.value = p.colorNames[0];
+      }
+      if (p.colorNames && p.colorNames[1]) {
+        const name2 = document.getElementById('color-name-2');
+        if (name2) name2.value = p.colorNames[1];
+      }
+      updateColorSwatches();
+
       const photoBadge = document.getElementById('photo-filename-badge');
       photoBadge.textContent = 'Current image loaded';
       photoBadge.classList.remove('hidden');
@@ -1202,9 +1125,21 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
     }
 
     function resetForm() {
-      currentAIData = null;
-      const aiStatus = document.getElementById('ai-detect-status');
-      if (aiStatus) aiStatus.classList.add('hidden');
+      currentFinish = '';
+      currentUpholstery = '';
+      document.querySelectorAll('.finish-chip, .upholstery-chip').forEach(c => {
+        c.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
+        c.classList.add('bg-white', 'text-stone-700', 'border-stone-200');
+      });
+      const c1 = document.getElementById('color-picker-1');
+      const c2 = document.getElementById('color-picker-2');
+      const n1 = document.getElementById('color-name-1');
+      const n2 = document.getElementById('color-name-2');
+      if (c1) c1.value = '#D4B996';
+      if (c2) c2.value = '#262626';
+      if (n1) n1.value = 'Natural';
+      if (n2) n2.value = 'Charcoal';
+      updateColorSwatches();
 
       document.getElementById('product-form').reset();
       document.getElementById('edit-product-id').value = '';
@@ -1249,6 +1184,11 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       const image = document.getElementById('prod-image').value.trim();
       const model3d = document.getElementById('prod-3d').value.trim() || null;
 
+      const color1 = document.getElementById('color-picker-1')?.value || '#D4B996';
+      const color2 = document.getElementById('color-picker-2')?.value || '#262626';
+      const colorName1 = document.getElementById('color-name-1')?.value.trim() || 'Natural';
+      const colorName2 = document.getElementById('color-name-2')?.value.trim() || 'Charcoal';
+
       if (!image) {
         alert('Please drop a photo or paste an image URL.');
         return;
@@ -1272,13 +1212,10 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
             dimensions,
             seatHeight,
             image,
-            model3d
+            model3d,
+            colors: [color1, color2],
+            colorNames: [colorName1, colorName2]
           };
-          if (currentAIData) {
-            if (currentAIData.colors) catalog[idx].colors = currentAIData.colors;
-            if (currentAIData.colorNames) catalog[idx].colorNames = currentAIData.colorNames;
-            if (currentAIData.description) catalog[idx].description = currentAIData.description;
-          }
           pieceToSave = catalog[idx];
         }
       } else {
@@ -1297,11 +1234,12 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
           dimensions,
           seatHeight,
           weight: '35 kg',
-          colors: (currentAIData && currentAIData.colors) ? currentAIData.colors : ['#D4B996', '#262626'],
-          colorNames: (currentAIData && currentAIData.colorNames) ? currentAIData.colorNames : ['Natural', 'Charcoal'],
+          colors: [color1, color2],
+          colorNames: [colorName1, colorName2],
           image,
           model3d,
-          description: (currentAIData && currentAIData.description) ? currentAIData.description : `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
+          hidden: false,
+          description: `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
         };
         catalog.unshift(newPiece);
         pieceToSave = newPiece;
@@ -1315,7 +1253,7 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       }
 
       resetForm();
-      alert(`Saved! "${name}" ($${price}) is now synced to the Cloud and live on your store.`);
+      alert(`Saved! "${name}" (${price.toLocaleString()} Birr) is now synced to the Cloud and live on your store.`);
     }
 
     function updateLivePreview() {
@@ -1349,8 +1287,8 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
             <h4 class="font-serif text-base text-stone-900 mb-1">${name}</h4>
             <p class="text-xs text-stone-500 mb-2">${material}</p>
             <div class="pt-2 border-t border-stone-100 flex items-center justify-between">
-              <span class="font-semibold text-stone-900 text-sm">$${price.toLocaleString()}</span>
-              ${origPrice ? `<span class="text-xs text-stone-400 line-through">$${origPrice.toLocaleString()}</span>` : ''}
+              <span class="font-semibold text-stone-900 text-sm">${price.toLocaleString()} Birr</span>
+              ${origPrice ? `<span class="text-xs text-stone-400 line-through">${origPrice.toLocaleString()} Birr</span>` : ''}
             </div>
           </div>
         </div>
@@ -1396,25 +1334,56 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       updateLivePreview();
     }
 
-    function exportProductsJS() {
-      const content = `const productsData = ${JSON.stringify(catalog, null, 2)};\n`;
-      const blob = new Blob([content], { type: 'application/javascript' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'products.js';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
     // =========================================================================
     // DATABASE VIEWER (MokeDB)
     // =========================================================================
     function updateDatabaseStats() {
-      if (!window.MokeDB) return;
-      const orders = MokeDB.getOrders();
       const badge = document.getElementById('db-orders-badge');
-      if (badge) badge.textContent = orders.length;
+      const mobileBadge = document.getElementById('mobile-orders-badge');
+      const pendingDot = document.getElementById('pending-alert-dot');
+      
+      const allOrders = (cloudOrders && cloudOrders.length > 0) ? cloudOrders : (window.MokeDB ? MokeDB.getOrders() : []);
+      const pendingOrders = allOrders.filter(o => o.status === 'pending' || !o.status);
+
+      if (badge) badge.textContent = allOrders.length;
+      if (mobileBadge) mobileBadge.textContent = allOrders.length;
+      if (pendingDot) {
+        if (pendingOrders.length > 0) {
+          pendingDot.classList.remove('hidden');
+        } else {
+          pendingDot.classList.add('hidden');
+        }
+      }
+    }
+    window.updateDatabaseStats = updateDatabaseStats;
+
+    let cloudOrders = [];
+    let currentOrderFilter = 'all';
+
+    function initOrdersCloudSync() {
+      if (window.MokeCloud && typeof MokeCloud.onOrdersSync === 'function') {
+        MokeCloud.onOrdersSync((orders) => {
+          cloudOrders = orders || [];
+          updateDatabaseStats();
+          const modal = document.getElementById('database-modal');
+          if (modal && !modal.classList.contains('hidden')) {
+            renderDatabaseView();
+          }
+        });
+      }
+    }
+    window.initOrdersCloudSync = initOrdersCloudSync;
+
+    function setOrderFilter(filter) {
+      currentOrderFilter = filter;
+      document.querySelectorAll('.order-filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.className = 'order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-900 text-white shadow-sm transition';
+        } else {
+          btn.className = 'order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition';
+        }
+      });
+      renderDatabaseView();
     }
 
     function openDatabaseModal() {
@@ -1431,106 +1400,226 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
     }
 
     function renderDatabaseView() {
-      if (!window.MokeDB) return;
-      const users = MokeDB.getUsers();
-      const orders = MokeDB.getOrders();
+      const orders = cloudOrders.length > 0 ? cloudOrders : (window.MokeDB ? MokeDB.getOrders() : []);
+      const users = window.MokeDB ? MokeDB.getUsers() : [];
 
       const userCountEl = document.getElementById('db-stat-users');
       const orderCountEl = document.getElementById('db-stat-orders');
       const totalRevenueEl = document.getElementById('db-stat-revenue');
       const tableBody = document.getElementById('db-orders-table-body');
 
-      if (userCountEl) userCountEl.textContent = users.length;
+      const countAllEl = document.getElementById('count-filter-all');
+      const countPendingEl = document.getElementById('count-filter-pending');
+      const countApprovedEl = document.getElementById('count-filter-approved');
+      const countRejectedEl = document.getElementById('count-filter-rejected');
+
+      const pendingOrders = orders.filter(o => o.status === 'pending' || !o.status);
+      const approvedOrders = orders.filter(o => o.status === 'approved');
+      const rejectedOrders = orders.filter(o => o.status === 'rejected');
+
+      if (countAllEl) countAllEl.textContent = orders.length;
+      if (countPendingEl) countPendingEl.textContent = pendingOrders.length;
+      if (countApprovedEl) countApprovedEl.textContent = approvedOrders.length;
+      if (countRejectedEl) countRejectedEl.textContent = rejectedOrders.length;
+
+      if (userCountEl) userCountEl.textContent = users.length || orders.length;
       if (orderCountEl) orderCountEl.textContent = orders.length;
       
-      const totalRev = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
-      if (totalRevenueEl) totalRevenueEl.textContent = `$${totalRev.toLocaleString()}`;
+      const totalRev = approvedOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+      if (totalRevenueEl) totalRevenueEl.textContent = `${totalRev.toLocaleString()} Birr (Approved)`;
+
+      let filtered = orders;
+      if (currentOrderFilter === 'pending') filtered = pendingOrders;
+      if (currentOrderFilter === 'approved') filtered = approvedOrders;
+      if (currentOrderFilter === 'rejected') filtered = rejectedOrders;
 
       if (tableBody) {
-        if (orders.length === 0) {
+        if (filtered.length === 0) {
           tableBody.innerHTML = `
             <tr>
-              <td colspan="7" class="text-center py-8 text-stone-400 text-xs">
-                No customer orders recorded yet. When orders are placed on index.html, they will appear here.
+              <td colspan="7" class="text-center py-10 text-stone-400 text-xs">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-stone-300"></i>
+                No ${currentOrderFilter !== 'all' ? currentOrderFilter : ''} orders found.
               </td>
             </tr>
           `;
         } else {
-          tableBody.innerHTML = orders.map(order => `
-            <tr class="hover:bg-stone-50 transition border-b border-stone-200">
-              <td class="px-4 py-3 font-mono font-bold text-stone-900">${order.orderNumber}</td>
-              <td class="px-4 py-3">
-                <span class="font-semibold block text-stone-900">${order.customerName}</span>
-                <span class="text-stone-400 text-[11px]">${order.customerEmail || 'No email'}</span>
-              </td>
-              <td class="px-4 py-3 text-stone-700">${order.customerPhone}</td>
-              <td class="px-4 py-3 max-w-xs truncate text-stone-600" title="${order.deliveryAddress}">
-                ${order.deliveryAddress}
-              </td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.paymentMethod.includes('CBE') ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900'}">
-                  ${order.paymentMethod}
-                </span>
-              </td>
-              <td class="px-4 py-3 font-bold text-stone-900">$${(order.subtotal || 0).toLocaleString()}</td>
-              <td class="px-4 py-3 text-right">
-                <button onclick="deleteDatabaseOrder('${order.id}')" class="text-stone-400 hover:text-red-600 transition p-1" title="Delete record">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-              </td>
-            </tr>
-          `).join('');
+          tableBody.innerHTML = filtered.map(order => {
+            const isApproved = order.status === 'approved';
+            const isRejected = order.status === 'rejected';
+            const isPending = !isApproved && !isRejected;
+
+            let statusPill = '';
+            if (isPending) {
+              statusPill = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                🟡 Pending
+              </span>`;
+            } else if (isApproved) {
+              statusPill = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                ✅ Approved
+              </span>`;
+            } else {
+              statusPill = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">
+                ❌ Rejected
+              </span>`;
+            }
+
+            const itemsStr = (order.items || []).map(i => `${i.quantity}x ${i.name}`).join(', ') || 'Custom piece';
+            const formattedDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+
+            return `
+              <tr class="hover:bg-stone-50 transition border-b border-stone-200">
+                <td class="px-4 py-3 font-mono font-bold text-stone-900">
+                  <div>#${(order.id || '').slice(0, 8)}</div>
+                  <div class="text-[10px] text-stone-400 font-normal font-sans">${formattedDate}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="font-semibold block text-stone-900">${order.customerName || 'Anonymous'}</span>
+                  <span class="text-stone-400 text-[11px]">${order.customerEmail || 'Guest'}</span>
+                </td>
+                <td class="px-4 py-3 text-stone-700">
+                  <div class="font-medium">${order.customerPhone || 'N/A'}</div>
+                  <div class="text-[10px] text-stone-500 max-w-xs truncate" title="${order.customerAddress || ''}">${order.customerAddress || ''}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-xs text-stone-800 font-medium max-w-xs truncate" title="${itemsStr}">${itemsStr}</div>
+                  <div class="text-[11px] font-bold text-stone-900 mt-0.5">${(order.subtotal || 0).toLocaleString()} Birr</div>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  ${order.receiptUrl ? `
+                    <button type="button" onclick="viewPaymentReceipt('${order.receiptUrl}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-[11px] font-medium border border-stone-300 transition">
+                      <i data-lucide="image" class="w-3.5 h-3.5"></i> View Proof
+                    </button>
+                  ` : `
+                    <span class="text-[10px] text-stone-400 italic">No receipt</span>
+                  `}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  ${statusPill}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    ${!isApproved ? `
+                      <button onclick="approveOrder('${order.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1 shadow-sm" title="Approve order & notify customer">
+                        <i data-lucide="check" class="w-3 h-3"></i> Approve
+                      </button>
+                    ` : ''}
+                    ${!isRejected ? `
+                      <button onclick="rejectOrder('${order.id}')" class="px-2 py-1 bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-600 rounded-lg text-[10px] font-bold uppercase transition" title="Reject fake/invalid payment">
+                        <i data-lucide="x" class="w-3 h-3"></i> Reject
+                      </button>
+                    ` : ''}
+                    <button onclick="deleteDatabaseOrder('${order.id}')" class="text-stone-300 hover:text-red-600 p-1 rounded transition" title="Delete record">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
         }
       }
 
       if (window.lucide) lucide.createIcons();
     }
 
-    function deleteDatabaseOrder(id) {
-      if (confirm('Delete this order record from the database?')) {
-        MokeDB.deleteOrder(id);
+    async function approveOrder(id) {
+      if (window.MokeCloud && typeof MokeCloud.updateOrderStatus === 'function') {
+        const ok = await MokeCloud.updateOrderStatus(id, 'approved', 'Order approved! We will contact you soon on your phone.');
+        if (ok) {
+          const idx = cloudOrders.findIndex(o => o.id === id);
+          if (idx >= 0) cloudOrders[idx].status = 'approved';
+          renderDatabaseView();
+          updateDatabaseStats();
+        }
+      }
+    }
+
+    async function rejectOrder(id) {
+      const reason = prompt('Optional reason for rejection (e.g. Payment not verified / Fake receipt):', 'Payment screenshot could not be verified with our bank account.');
+      if (reason === null) return; // cancelled
+
+      if (window.MokeCloud && typeof MokeCloud.updateOrderStatus === 'function') {
+        const ok = await MokeCloud.updateOrderStatus(id, 'rejected', reason);
+        if (ok) {
+          const idx = cloudOrders.findIndex(o => o.id === id);
+          if (idx >= 0) cloudOrders[idx].status = 'rejected';
+          renderDatabaseView();
+          updateDatabaseStats();
+        }
+      }
+    }
+
+    async function deleteDatabaseOrder(id) {
+      if (confirm('Delete this order record permanently?')) {
+        if (window.MokeCloud && typeof MokeCloud.deleteOrder === 'function') {
+          await MokeCloud.deleteOrder(id);
+          cloudOrders = cloudOrders.filter(o => o.id !== id);
+        }
+        if (window.MokeDB) {
+          MokeDB.deleteOrder(id);
+        }
         renderDatabaseView();
         updateDatabaseStats();
       }
     }
 
+    function viewPaymentReceipt(url) {
+      const modal = document.getElementById('receipt-modal');
+      const img = document.getElementById('receipt-modal-img');
+      const link = document.getElementById('receipt-modal-link');
+      if (img) img.src = url;
+      if (link) link.href = url;
+      if (modal) modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeReceiptModal() {
+      const modal = document.getElementById('receipt-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function exportDatabaseJSON() {
-      if (!window.MokeDB) return;
-      const json = MokeDB.exportDatabase();
+      const orders = cloudOrders.length > 0 ? cloudOrders : (window.MokeDB ? MokeDB.getOrders() : []);
+      const json = JSON.stringify(orders, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `moke_database_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `moke_orders_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       checkAdminAuth();
-      initStudio();
-      updateDatabaseStats();
+      if (sessionStorage.getItem('moke_admin_auth') === 'true') {
+        initStudio();
+        updateDatabaseStats();
+        initOrdersCloudSync();
+      }
+      if (window.lucide) lucide.createIcons();
     });
   </script>
 
   <!-- DATABASE MODAL VIEWER -->
-  <div id="database-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6">
+  <div id="database-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-6">
     <div class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onclick="closeDatabaseModal()"></div>
-    <div class="relative bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
+    <div class="relative bg-white rounded-3xl max-w-6xl w-full p-5 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
       
-      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-6">
+      <div class="flex flex-wrap items-center justify-between pb-4 border-b border-stone-200 mb-6 gap-3">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
-            <i data-lucide="database" class="w-5 h-5"></i>
+            <i data-lucide="clipboard-check" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-serif text-2xl text-stone-900">Moke Orders & Customer Database</h3>
-            <span class="text-xs text-stone-500">Live Client-Side Database Engine</span>
+            <h3 class="font-serif text-2xl text-stone-900">Customer Orders & Approvals</h3>
+            <span class="text-xs text-stone-500">Live Real-time Payment Verification Center</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="exportDatabaseJSON()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Database Backup (.json)
+          <button onclick="exportDatabaseJSON()" class="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Backup (.json)
           </button>
           <button onclick="closeDatabaseModal()" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition">
             <i data-lucide="x" class="w-5 h-5"></i>
@@ -1541,17 +1630,33 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
       <!-- Stats Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
-          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Registered Profiles</span>
-          <span id="db-stat-users" class="text-2xl font-serif text-stone-900 font-bold">0</span>
-        </div>
-        <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
-          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Total Orders Placed</span>
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Total Orders</span>
           <span id="db-stat-orders" class="text-2xl font-serif text-stone-900 font-bold">0</span>
         </div>
         <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
-          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Gross Order Revenue</span>
-          <span id="db-stat-revenue" class="text-2xl font-serif text-emerald-700 font-bold">$0</span>
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Active Customers</span>
+          <span id="db-stat-users" class="text-2xl font-serif text-stone-900 font-bold">0</span>
         </div>
+        <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200">
+          <span class="text-stone-400 text-xs uppercase tracking-wider block font-semibold">Verified Revenue</span>
+          <span id="db-stat-revenue" class="text-2xl font-serif text-emerald-700 font-bold">0 Birr</span>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button data-filter="all" onclick="setOrderFilter('all')" class="order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-900 text-white shadow-sm transition">
+          All Orders (<span id="count-filter-all">0</span>)
+        </button>
+        <button data-filter="pending" onclick="setOrderFilter('pending')" class="order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition">
+          🟡 Pending Review (<span id="count-filter-pending">0</span>)
+        </button>
+        <button data-filter="approved" onclick="setOrderFilter('approved')" class="order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition">
+          ✅ Approved (<span id="count-filter-approved">0</span>)
+        </button>
+        <button data-filter="rejected" onclick="setOrderFilter('rejected')" class="order-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition">
+          ❌ Rejected (<span id="count-filter-rejected">0</span>)
+        </button>
       </div>
 
       <!-- Orders Table -->
@@ -1559,12 +1664,12 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
         <table class="w-full text-xs text-left">
           <thead class="bg-stone-100 text-stone-600 uppercase tracking-wider text-[10px]">
             <tr>
-              <th class="px-4 py-3">Order #</th>
-              <th class="px-4 py-3">Customer & Gmail</th>
-              <th class="px-4 py-3">Phone</th>
-              <th class="px-4 py-3">Delivery Address</th>
-              <th class="px-4 py-3">Method</th>
-              <th class="px-4 py-3">Total</th>
+              <th class="px-4 py-3">Order # & Date</th>
+              <th class="px-4 py-3">Customer</th>
+              <th class="px-4 py-3">Phone & Address</th>
+              <th class="px-4 py-3">Pieces & Total</th>
+              <th class="px-4 py-3 text-center">Payment Proof</th>
+              <th class="px-4 py-3 text-center">Status</th>
               <th class="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -1576,78 +1681,27 @@ Analyze this furniture photo in detail and return ONLY a valid JSON object (no m
     </div>
   </div>
 
-  <!-- AI SETTINGS MODAL -->
-  <div id="ai-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6">
-    <div class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onclick="closeAISettingsModal()"></div>
-    <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl z-10 border border-stone-200">
-      
-      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md">
-            <i data-lucide="sparkles" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-serif text-xl text-stone-900">Google Gemini AI Auto-Detect</h3>
-            <span class="text-xs text-stone-500">Auto-detect name, finish, upholstery & colors</span>
-          </div>
-        </div>
-        <button onclick="closeAISettingsModal()" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
+  <!-- RECEIPT LIGHTBOX ZOOM MODAL -->
+  <div id="receipt-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-sm" onclick="closeReceiptModal()">
+    <div class="relative bg-white rounded-3xl max-w-lg w-full p-5 shadow-2xl text-center" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-200 mb-3">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-stone-900">Payment Screenshot Inspection</h4>
+        <button onclick="closeReceiptModal()" class="p-1.5 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-
-      <div class="space-y-4">
-        <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
-          <div class="font-semibold flex items-center gap-1.5 mb-1 text-amber-950">
-            <span>🛡️ 100% Private & Free</span>
-          </div>
-          Your key stays saved in your computer's browser storage. It is never shared with shoppers or uploaded publicly.
-        </div>
-
-        <div>
-          <label for="gemini-api-key-input" class="block text-xs uppercase tracking-wider font-semibold text-stone-700 mb-1.5">
-            Gemini API Key *
-          </label>
-          <div class="relative">
-            <input 
-              id="gemini-api-key-input" 
-              type="password" 
-              placeholder="Paste AI key here (e.g. AQ.Ab8RN6... or AIzaSy...)" 
-              class="w-full pl-4 pr-10 py-3 bg-stone-50 border border-stone-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-            <button 
-              type="button" 
-              onclick="toggleAIKeyVisibility()" 
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1">
-              <i id="ai-key-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <span id="ai-modal-status-badge" class="mt-2 text-[11px] block text-stone-500">Checking key status...</span>
-        </div>
-
-        <div class="flex items-center gap-2 pt-2">
-          <button 
-            type="button" 
-            onclick="saveAIKey()" 
-            class="flex-1 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition shadow-md flex items-center justify-center gap-1.5">
-            <i data-lucide="check" class="w-4 h-4"></i> Save & Activate
-          </button>
-          <button 
-            type="button" 
-            onclick="testAIKeyConnection()" 
-            id="ai-test-btn" 
-            class="px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium transition">
-            Test Key
-          </button>
-          <button 
-            type="button" 
-            onclick="clearAIKey()" 
-            class="px-3 py-3 text-stone-400 hover:text-red-700 text-xs font-medium transition" title="Clear key">
-            Remove
-          </button>
-        </div>
+      <div class="max-h-[75vh] overflow-auto rounded-2xl bg-stone-100 p-2 flex items-center justify-center">
+        <img id="receipt-modal-img" src="" alt="Payment Receipt" class="max-w-full max-h-[70vh] rounded-xl object-contain shadow" />
+      </div>
+      <div class="mt-4 flex justify-between items-center text-xs">
+        <a id="receipt-modal-link" href="#" target="_blank" class="text-stone-900 font-semibold hover:underline flex items-center gap-1">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open Full Image
+        </a>
+        <button onclick="closeReceiptModal()" class="px-5 py-2 bg-stone-900 text-white rounded-xl text-xs font-semibold">Done</button>
       </div>
     </div>
   </div>
+
+  <!-- /DATABASE MODAL -->
 </body>
 </html>
