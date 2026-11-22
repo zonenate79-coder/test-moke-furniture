@@ -1,4 +1,4 @@
-// Firebase SDK v10 (Compat / Web CDN) Integration for Moke Furniture
+﻿// Firebase SDK v10 (Compat / Web CDN) Integration for Moke Furniture
 // Provides real-time cross-device sync between PC, Phone, and all customers.
 
 const firebaseConfig = {
@@ -24,6 +24,11 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
 const firestoreDb = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
 const firebaseAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
 const firebaseStorage = (typeof firebase !== 'undefined' && firebase.storage) ? firebase.storage() : null;
+
+// Ensure persistent login across page refreshes and redirects
+if (firebaseAuth && typeof firebase !== 'undefined' && firebase.auth && firebase.auth.Auth) {
+  firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn('Persistence note:', e));
+}
 
 window.MokeCloud = {
   COLLECTIONS: {
@@ -216,45 +221,38 @@ window.MokeCloud = {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    // Check if user is on mobile phone / tablet
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
-
-    if (isMobile) {
-      // Direct single-tab redirect for phone (prevents about:blank and extra tabs)
-      await firebaseAuth.signInWithRedirect(provider);
-      return null;
-    }
-
     try {
+      // Try popup first (works directly on both desktop & mobile without losing session)
       const result = await firebaseAuth.signInWithPopup(provider);
       return result.user;
     } catch (err) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        // Fallback to redirect if popup is blocked
+        await firebaseAuth.signInWithRedirect(provider);
+        return null;
+      }
       if (err.code === 'auth/configuration-not-found') {
         throw new Error('Google Sign-In is not enabled yet in your Firebase project. Please enable Google in Firebase Console -> Authentication -> Sign-in method.');
       }
       if (err.code === 'auth/unauthorized-domain') {
         throw new Error('This domain is not authorized in Firebase. Please add zonenate79-coder.github.io in Firebase Console -> Authentication -> Settings -> Authorized domains.');
       }
-      if (err.code === 'auth/popup-blocked') {
-        // Fallback to single-tab redirect if browser blocked popup
-        await firebaseAuth.signInWithRedirect(provider);
-        return null;
-      }
       throw err;
     }
   },
 
-  initRedirectHandler() {
-    if (firebaseAuth && typeof firebaseAuth.getRedirectResult === 'function') {
-      firebaseAuth.getRedirectResult().then(result => {
-        if (result && result.user) {
-          console.log('✅ Logged in via Google redirect:', result.user.email);
-        }
-      }).catch(err => {
-        if (err && err.code && err.code !== 'auth/popup-closed-by-user') {
-          console.error('Redirect sign-in error:', err);
-        }
-      });
+  async handleRedirectLogin(callback) {
+    if (!firebaseAuth || typeof firebaseAuth.getRedirectResult !== 'function') return;
+    try {
+      const result = await firebaseAuth.getRedirectResult();
+      if (result && result.user) {
+        console.log('✅ Logged in via Google redirect:', result.user.email);
+        if (typeof callback === 'function') callback(result.user);
+      }
+    } catch (err) {
+      if (err && err.code && err.code !== 'auth/popup-closed-by-user') {
+        console.warn('Redirect sign-in notice:', err);
+      }
     }
   },
 
@@ -361,6 +359,3 @@ window.MokeCloud = {
 
 // Ensure global accessibility across all contexts
 var MokeCloud = window.MokeCloud;
-if (window.MokeCloud && typeof window.MokeCloud.initRedirectHandler === 'function') {
-  window.MokeCloud.initRedirectHandler();
-}
