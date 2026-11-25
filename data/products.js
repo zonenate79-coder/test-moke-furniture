@@ -1,7 +1,26 @@
-const productsData = [
+﻿const productsData = [
   // ==========================================
-  // SOFAS (10 Products)
+  // SOFAS (11 Products)
   // ==========================================
+  {
+    id: "sofa-custom-1",
+    name: "Cozy Cloud Paw 2-Seater Sofa",
+    category: "sofas",
+    tag: "New Arrival",
+    price: 1950,
+    originalPrice: 2250,
+    rating: 5.0,
+    reviewsCount: 14,
+    material: "Soft Wool Bouclé & Honey Oak Legs",
+    filterTag: "boucle",
+    dimensions: "190 × 90 × 76 cm",
+    seatHeight: "42 cm",
+    weight: "58 kg",
+    colors: ["#FFF8F0", "#F4DFC8", "#8B5A2B"],
+    colorNames: ["Warm Cream", "Honey Paw", "Natural Oak"],
+    image: "images/custom-sofa-paw.jpg",
+    description: "Curved plush comfort featuring dual accent paw cushions, low-profile rounded arms, and solid tapered hardwood legs."
+  },
   {
     id: "sofa-1",
     name: "Nordic Bouclé 3-Seater",
@@ -19,7 +38,6 @@ const productsData = [
     colors: ["#F4EFEA", "#D8CEBE", "#2B2B2A"],
     colorNames: ["Ivory Bouclé", "Oatmeal Warm", "Charcoal Slate"],
     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
-    model3d: "https://modelviewer.dev/shared-assets/models/SheenChair.glb",
     description: "Sculpted with low, enveloping lines and upholstered in heavy tactile bouclé wool. Built upon a solid FSC-certified white oak plinth for enduring grace."
   },
   {
@@ -195,8 +213,27 @@ const productsData = [
   },
 
   // ==========================================
-  // CHAIRS (10 Products)
+  // CHAIRS (11 Products)
   // ==========================================
+  {
+    id: "chair-custom-1",
+    name: "Nordic Haven Tub Accent Chair",
+    category: "chairs",
+    tag: "New Arrival",
+    price: 720,
+    originalPrice: 850,
+    rating: 4.9,
+    reviewsCount: 19,
+    material: "Textured Cream Fabric & Tapered Oak Legs",
+    filterTag: "wood",
+    dimensions: "72 × 68 × 78 cm",
+    seatHeight: "44 cm",
+    weight: "14 kg",
+    colors: ["#FAF0E6", "#D2B48C", "#4A3B32"],
+    colorNames: ["Oatmeal Cream", "Natural Beech", "Espresso"],
+    image: "images/custom-chair-nordic.jpg",
+    description: "Sculptural curved tub silhouette with deep inset cushioning and tripod-inspired solid oak flared legs."
+  },
   {
     id: "chair-1",
     name: "Fjord Oak & Woven Cord Lounge Chair",
@@ -214,7 +251,6 @@ const productsData = [
     colors: ["#D4B996", "#262626"],
     colorNames: ["Natural Beech Cord", "Black Paper Cord"],
     image: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80",
-    model3d: "https://modelviewer.dev/shared-assets/models/SheenChair.glb",
     description: "Handwoven seat pattern with over 120 meters of durable Danish paper cord over a sculptured solid oak frame."
   },
   {

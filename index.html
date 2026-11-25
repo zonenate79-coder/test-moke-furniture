@@ -22,12 +22,29 @@
           },
           colors: {
             stone: {
-              50: '#FAF8F5',
-              100: '#F3EFEA',
-              200: '#E6DFD5',
-              300: '#D5C9BC',
-              800: '#2C2825',
-              900: '#1A1816',
+              50: '#FAF6F0',
+              100: '#F3ECE2',
+              200: '#E6DCCD',
+              300: '#D5C6B3',
+              400: '#A89A88',
+              500: '#7E7061',
+              600: '#5F5246',
+              700: '#46392F',
+              800: '#2E221A',
+              900: '#1F1510',
+            },
+            amber: {
+              50: '#FBF2EC',
+              100: '#F6E2D6',
+              200: '#EDC7B1',
+              300: '#E2A583',
+              400: '#D4825A',
+              500: '#C06A43',
+              600: '#AC5735',
+              700: '#94472B',
+              800: '#7F3C24',
+              900: '#63301E',
+              950: '#3D1C11',
             },
             moke: {
               cream: '#FDFCFA',
@@ -44,8 +61,6 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Google 3D & AR Model Viewer -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
   <style>
     /* Custom Scrollbar */
@@ -77,7 +92,7 @@
   <!-- Top Announcement Bar -->
   <aside aria-label="Announcement" class="bg-stone-900 text-stone-200 text-[11px] font-medium tracking-widest uppercase py-2 px-4 text-center border-b border-stone-800">
     <div class="max-w-7xl mx-auto flex items-center justify-center gap-3">
-      <span>🚚 Free Delivery on All Orders — Addis Ababa &amp; Beyond</span>
+      <span>🚚 Free Delivery on All Orders — Bishoftu &amp; Beyond</span>
       <span class="hidden md:inline text-stone-600">•</span>
       <span class="hidden md:inline text-stone-400">Handcrafted Sustainable Timber</span>
     </div>
@@ -134,10 +149,10 @@
         </button>
 
         <!-- Bag Button -->
-        <button id="cart-btn" class="relative p-2 sm:px-3 sm:py-2 text-stone-800 hover:text-stone-950 transition rounded-full hover:bg-stone-100 flex items-center gap-2 border border-stone-200" aria-label="Shopping bag">
+        <button id="cart-btn" class="relative h-10 px-3.5 sm:px-4 bg-stone-900 hover:bg-amber-800 text-white transition-colors duration-300 rounded-full flex items-center gap-2" aria-label="Shopping bag">
           <i data-lucide="shopping-bag" class="w-4 h-4"></i>
           <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider">Bag</span>
-          <span id="cart-badge" class="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md transition opacity-0">
+          <span id="cart-badge" class="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-[10px] font-bold min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center ring-2 ring-white transition opacity-0">
             0
           </span>
         </button>
@@ -203,16 +218,22 @@
 
       <!-- Quick Category Jumpers -->
       <div class="grid grid-cols-3 gap-3 sm:gap-6 w-full max-w-xl mt-16 pt-12 border-t border-white/20 text-center">
-        <a href="#sofas" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
-          <span class="block text-2xl mb-1">🛋️</span>
+        <a href="#sofas" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15 flex flex-col items-center justify-center">
+          <div class="h-10 flex items-center justify-center mb-1.5 transition-transform duration-300 group-hover:scale-110">
+            <img src="images/icon-sofa.png" alt="Sofas" class="h-8 max-w-[56px] object-contain drop-shadow" />
+          </div>
           <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Sofas</span>
         </a>
-        <a href="#chairs" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
-          <span class="block text-2xl mb-1">🪑</span>
+        <a href="#chairs" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15 flex flex-col items-center justify-center">
+          <div class="h-10 flex items-center justify-center mb-1.5 transition-transform duration-300 group-hover:scale-110">
+            <img src="images/icon-chair.png" alt="Chairs" class="h-8 max-w-[36px] object-contain drop-shadow" />
+          </div>
           <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Chairs</span>
         </a>
-        <a href="#tables" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15">
-          <span class="block text-2xl mb-1">🪵</span>
+        <a href="#tables" class="group p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/15 flex flex-col items-center justify-center">
+          <div class="h-10 flex items-center justify-center mb-1.5 transition-transform duration-300 group-hover:scale-110">
+            <img src="images/icon-table.png" alt="Tables" class="h-8 max-w-[56px] object-contain drop-shadow" />
+          </div>
           <span class="text-xs sm:text-sm font-serif text-white group-hover:text-amber-300 transition">Tables</span>
         </a>
       </div>
@@ -437,70 +458,91 @@
   </section>
 
 
-  <!-- FEEDBACK FAB BUTTON (floating bottom-right, both phone & PC) -->
-  <button id="feedback-fab" onclick="openFeedbackPopup()" class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-stone-900 hover:bg-stone-800 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 group" title="Send Feedback">
-    <span class="text-xl group-hover:scale-110 transition">💬</span>
+  <!-- FEEDBACK BUTTON (floating, phone & PC) -->
+  <button id="feedback-fab" onclick="openFeedbackPopup()" class="fixed bottom-6 right-6 z-40 w-12 h-12 bg-stone-900 hover:bg-amber-800 text-white rounded-full shadow-xl flex items-center justify-center transition-colors duration-300" title="Send Feedback" aria-label="Send feedback">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
 
-  <!-- FEEDBACK POPUP MODAL -->
-  <div id="feedback-popup" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-stone-950/50 backdrop-blur-sm" onclick="if(event.target===this)closeFeedbackPopup()">
-    <div class="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden" style="max-height: 92vh;">
+  <!-- FEEDBACK POPUP -->
+  <div id="feedback-popup" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-stone-900/60 backdrop-blur-sm" onclick="if(event.target===this)closeFeedbackPopup()" role="dialog" aria-modal="true" aria-labelledby="fb-title">
+    <div class="bg-stone-50 w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden" style="max-height: 92vh;">
+
       <!-- Header -->
-      <div class="sticky top-0 bg-white border-b border-stone-100 px-5 py-4 flex items-center justify-between z-10">
-        <div>
-          <h3 class="font-serif text-xl text-stone-900">Share Your Feedback</h3>
-          <p class="text-[10px] text-stone-400 mt-0.5 uppercase tracking-widest">We read every message</p>
-        </div>
-        <button onclick="closeFeedbackPopup()" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <div class="relative bg-stone-900 text-white px-6 pt-6 pb-5">
+        <div class="sm:hidden mx-auto mb-3 h-1 w-10 rounded-full bg-white/25"></div>
+        <button onclick="closeFeedbackPopup()" class="absolute top-4 right-4 p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+        <p class="text-[10px] uppercase tracking-[0.25em] text-amber-300 mb-1.5">Moke Furniture</p>
+        <h3 id="fb-title" class="font-serif text-3xl leading-tight">We'd love to hear from you</h3>
+        <p class="text-sm text-white/70 mt-1.5">Your feedback helps us build better furniture and a better service.</p>
       </div>
-      <!-- Scrollable Form -->
-      <div class="p-5 space-y-4 overflow-y-auto" style="max-height: calc(92vh - 72px);">
-        <!-- Star Rating -->
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-700 block mb-2">Your Rating</span>
-          <div class="flex gap-2" id="fb-stars">
-            <button type="button" onclick="setFbRating(1)" class="fb-star text-3xl leading-none transition hover:scale-125" data-val="1">☆</button>
-            <button type="button" onclick="setFbRating(2)" class="fb-star text-3xl leading-none transition hover:scale-125" data-val="2">☆</button>
-            <button type="button" onclick="setFbRating(3)" class="fb-star text-3xl leading-none transition hover:scale-125" data-val="3">☆</button>
-            <button type="button" onclick="setFbRating(4)" class="fb-star text-3xl leading-none transition hover:scale-125" data-val="4">☆</button>
-            <button type="button" onclick="setFbRating(5)" class="fb-star text-3xl leading-none transition hover:scale-125" data-val="5">☆</button>
+
+      <!-- Form -->
+      <div class="px-6 py-6 space-y-6 overflow-y-auto" style="max-height: calc(92vh - 150px); padding-bottom: max(1.5rem, env(safe-area-inset-bottom));">
+
+        <!-- Rating -->
+        <div class="text-center bg-white border border-stone-200 rounded-2xl py-4 px-3">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-600 block mb-2">How was your experience?</span>
+          <div class="flex justify-center gap-1.5" id="fb-stars">
+            <button type="button" onclick="setFbRating(1)" class="fb-star text-4xl leading-none transition hover:scale-110 px-0.5" data-val="1" aria-label="1 star">☆</button>
+            <button type="button" onclick="setFbRating(2)" class="fb-star text-4xl leading-none transition hover:scale-110 px-0.5" data-val="2" aria-label="2 stars">☆</button>
+            <button type="button" onclick="setFbRating(3)" class="fb-star text-4xl leading-none transition hover:scale-110 px-0.5" data-val="3" aria-label="3 stars">☆</button>
+            <button type="button" onclick="setFbRating(4)" class="fb-star text-4xl leading-none transition hover:scale-110 px-0.5" data-val="4" aria-label="4 stars">☆</button>
+            <button type="button" onclick="setFbRating(5)" class="fb-star text-4xl leading-none transition hover:scale-110 px-0.5" data-val="5" aria-label="5 stars">☆</button>
           </div>
+          <p id="fb-rating-label" class="text-xs text-stone-500 mt-2 h-4">Tap a star to rate</p>
         </div>
-        <!-- Category Chips -->
+
+        <!-- Topic -->
         <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-700 block mb-2">What's this about?</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-600 block mb-2.5">What is this about?</span>
           <div class="flex flex-wrap gap-2">
-            <button type="button" onclick="pickFbCat(this,'Custom Furniture')" class="fb-cat px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-600 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition">🛋️ Custom Furniture</button>
-            <button type="button" onclick="pickFbCat(this,'Delivery & Assembly')" class="fb-cat px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-600 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition">🚚 Delivery</button>
-            <button type="button" onclick="pickFbCat(this,'Material & Color')" class="fb-cat px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-600 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition">🎨 Material</button>
-            <button type="button" onclick="pickFbCat(this,'General Review')" class="fb-cat px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-600 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition">⭐ General</button>
-            <button type="button" onclick="pickFbCat(this,'Other')" class="fb-cat px-3 py-1.5 rounded-full border border-stone-200 text-xs font-medium text-stone-600 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition">✏️ Other</button>
+            <button type="button" onclick="pickFbCat(this,'Custom Furniture')" class="fb-cat px-3.5 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600 hover:border-amber-800 hover:text-amber-900 transition">Custom Furniture</button>
+            <button type="button" onclick="pickFbCat(this,'Delivery & Assembly')" class="fb-cat px-3.5 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600 hover:border-amber-800 hover:text-amber-900 transition">Delivery</button>
+            <button type="button" onclick="pickFbCat(this,'Material & Color')" class="fb-cat px-3.5 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600 hover:border-amber-800 hover:text-amber-900 transition">Material &amp; Color</button>
+            <button type="button" onclick="pickFbCat(this,'General Review')" class="fb-cat px-3.5 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600 hover:border-amber-800 hover:text-amber-900 transition">General</button>
+            <button type="button" onclick="pickFbCat(this,'Other')" class="fb-cat px-3.5 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600 hover:border-amber-800 hover:text-amber-900 transition">Other</button>
           </div>
-          <input type="text" id="fb-cat-other" placeholder="Your topic..." class="hidden mt-3 w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"/>
+          <input type="text" id="fb-cat-other" placeholder="Your topic..." class="hidden mt-3 w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800"/>
         </div>
-        <!-- Name -->
-        <div>
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-stone-700 block mb-1.5">Name <span class="text-stone-400 normal-case font-normal">(optional)</span></label>
-          <input type="text" id="fb-name" placeholder="Your name" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"/>
-        </div>
-        <!-- Contact -->
-        <div>
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-stone-700 block mb-1.5">Phone or Email <span class="text-stone-400 normal-case font-normal">(optional)</span></label>
-          <input type="text" id="fb-contact" placeholder="09... or your email" class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900"/>
-        </div>
+
         <!-- Message -->
         <div>
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-stone-700 block mb-1.5">Your Message <span class="text-red-500">*</span></label>
-          <textarea id="fb-msg" rows="4" placeholder="Tell us what you think..." class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-stone-900 resize-none"></textarea>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="fb-msg" class="text-[11px] font-semibold uppercase tracking-wider text-stone-600">Your message <span class="text-amber-700">*</span></label>
+            <span id="fb-count" class="text-[11px] text-stone-400">0 / 500</span>
+          </div>
+          <textarea id="fb-msg" rows="4" maxlength="500" oninput="document.getElementById('fb-count').textContent = this.value.length + ' / 500'" placeholder="Tell us what you liked and what we can improve..." class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800 resize-none"></textarea>
         </div>
+
+        <!-- Optional details -->
+        <div>
+          <p class="text-[11px] text-stone-500 mb-2.5">Optional: add your details if you would like us to reply.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="fb-name" class="sr-only">Name</label>
+              <input type="text" id="fb-name" placeholder="Your name" class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800"/>
+            </div>
+            <div>
+              <label for="fb-contact" class="sr-only">Phone or email</label>
+              <input type="text" id="fb-contact" placeholder="Phone or email" class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800"/>
+            </div>
+          </div>
+        </div>
+
         <!-- Submit -->
-        <button type="button" id="fb-submit-btn" onclick="submitFeedback()" class="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-sm font-semibold uppercase tracking-widest shadow-lg transition">
+        <button type="button" id="fb-submit-btn" onclick="submitFeedback()" class="w-full py-3.5 bg-amber-800 hover:bg-amber-900 disabled:opacity-60 text-white rounded-xl text-sm font-semibold uppercase tracking-widest shadow-md transition">
           Send Feedback
         </button>
-        <div id="fb-success" class="hidden text-center text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-4 font-medium">
-          ✅ Thank you! Your feedback was received.
+
+        <!-- Success -->
+        <div id="fb-success" class="hidden text-center bg-white border border-stone-200 rounded-2xl p-6">
+          <div class="mx-auto mb-3 w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <p class="font-serif text-2xl text-stone-900">Thank you</p>
+          <p class="text-sm text-stone-500 mt-1">Your feedback was received. We read every message.</p>
         </div>
       </div>
     </div>
@@ -527,18 +569,21 @@
       _fbRating = val;
       document.querySelectorAll('.fb-star').forEach(function(s, i) {
         s.textContent = i < val ? '★' : '☆';
-        s.style.color = i < val ? '#d97706' : '#a8a29e';
+        s.style.color = i < val ? '#C06A43' : '#A89A88';
       });
+      var labels = ['Tap a star to rate', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+      var lbl = document.getElementById('fb-rating-label');
+      if (lbl) lbl.textContent = labels[val] || labels[0];
     }
 
     function pickFbCat(btn, val) {
       _fbCat = val;
       document.querySelectorAll('.fb-cat').forEach(function(c) {
-        c.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
-        c.classList.add('border-stone-200', 'text-stone-600');
+        c.classList.remove('bg-amber-800', 'text-white', 'border-amber-800');
+        c.classList.add('bg-white', 'border-stone-200', 'text-stone-600');
       });
-      btn.classList.add('bg-stone-900', 'text-white', 'border-stone-900');
-      btn.classList.remove('border-stone-200', 'text-stone-600');
+      btn.classList.add('bg-amber-800', 'text-white', 'border-amber-800');
+      btn.classList.remove('bg-white', 'border-stone-200', 'text-stone-600');
       var otherInput = document.getElementById('fb-cat-other');
       if (val === 'Other') { otherInput.classList.remove('hidden'); otherInput.focus(); }
       else { otherInput.classList.add('hidden'); otherInput.value = ''; }
@@ -575,12 +620,14 @@
         setFbRating(0);
         _fbCat = '';
         document.querySelectorAll('.fb-cat').forEach(function(c) {
-          c.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
-          c.classList.add('border-stone-200', 'text-stone-600');
+          c.classList.remove('bg-amber-800', 'text-white', 'border-amber-800');
+          c.classList.add('bg-white', 'border-stone-200', 'text-stone-600');
         });
         document.getElementById('fb-cat-other').classList.add('hidden');
+        document.getElementById('fb-count').textContent = '0 / 500';
         var success = document.getElementById('fb-success');
         success.classList.remove('hidden');
+        if (success.scrollIntoView) success.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(function() { success.classList.add('hidden'); closeFeedbackPopup(); }, 3000);
       } else {
         showToast('Could not save. Check your connection.');
@@ -618,7 +665,7 @@
         <div>
           <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Services</h4>
           <ul class="space-y-2.5">
-            <li><a href="javascript:void(0)" onclick="showToast('Complimentary White-Glove delivery applied at checkout over $1,500')" class="hover:text-stone-900 transition">White-Glove Assembly</a></li>
+            <li><a href="javascript:void(0)" onclick="showToast('Free delivery and white-glove assembly on all orders')" class="hover:text-stone-900 transition">White-Glove Assembly</a></li>
             <li><a href="javascript:void(0)" onclick="showToast('Sample kit contains 8 tactile wood & fabric swatches')" class="hover:text-stone-900 transition">Material Swatches</a></li>
             <li><a href="javascript:void(0)" onclick="showToast('10-Year Warranty covers solid timber frame and structural joints')" class="hover:text-stone-900 transition">10-Year Warranty</a></li>
             <li><a href="javascript:void(0)" onclick="showToast('30-Day in-home trial included with all orders')" class="hover:text-stone-900 transition">30-Day In-Home Trial</a></li>
@@ -626,11 +673,10 @@
         </div>
 
         <div>
-          <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Flagship Showrooms</h4>
+          <h4 class="font-semibold text-stone-900 uppercase tracking-widest text-[11px] mb-4">Visit Our Studio</h4>
           <ul class="space-y-2.5 text-stone-500">
-            <li>42 Mercer Street, Soho, New York</li>
-            <li>8700 Melrose Ave, West Hollywood</li>
-            <li>Gothersgade 12, Copenhagen</li>
+            <!-- TODO: add your street address, phone, WhatsApp and Telegram here -->
+            <li>Bishoftu, Ethiopia</li>
             <li class="pt-2 text-stone-900 font-medium">Mon - Sat: 10:00 - 19:00</li>
           </ul>
         </div>
@@ -679,54 +725,53 @@
   <!-- ========================================================================= -->
   <div id="cart-backdrop" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 hidden transition-opacity"></div>
   
-  <div id="cart-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-stone-200">
+  <div id="cart-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-stone-50 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out" role="dialog" aria-label="Shopping bag">
     <!-- Header -->
-    <div class="p-6 border-b border-stone-200 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <i data-lucide="shopping-bag" class="w-5 h-5 text-stone-900"></i>
-        <h3 class="font-serif text-xl text-stone-900">Your Shopping Bag</h3>
+    <div class="px-6 pt-6 pb-4 bg-white border-b border-stone-200 flex items-start justify-between">
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.25em] text-amber-700 mb-1">Moke Furniture</p>
+        <h3 class="font-serif text-3xl text-stone-900 leading-none">Your Bag</h3>
+        <p id="cart-count-label" class="text-xs text-stone-500 mt-1.5">0 items</p>
       </div>
-      <button id="close-cart-btn" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close bag">
+      <button id="close-cart-btn" class="p-2 -mr-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close bag">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
-    <!-- Free Shipping Progress -->
-    <div class="px-6 py-3.5 bg-amber-50/70 border-b border-amber-100">
-      <div class="flex items-center justify-between text-xs text-amber-950 mb-1.5" id="free-shipping-text">
-        Add <strong>$1,500</strong> for complimentary White-Glove Delivery
+    <!-- Delivery note -->
+    <div class="px-6 py-3 bg-amber-50 border-b border-amber-100">
+      <div class="flex items-center gap-2 text-xs text-amber-900" id="free-shipping-text">
+        <strong>Free delivery on all orders</strong>
       </div>
-      <div class="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
-        <div id="free-shipping-progress" class="bg-amber-900 h-full transition-all duration-500" style="width: 0%"></div>
-      </div>
+      <div id="free-shipping-progress" class="hidden" style="width: 0%"></div>
     </div>
 
     <!-- Cart Items Scroll Area -->
-    <div id="cart-items-container" class="flex-grow overflow-y-auto p-6 space-y-4">
+    <div id="cart-items-container" class="flex-grow overflow-y-auto px-6 py-5 space-y-3">
       <!-- Injected by app.js -->
     </div>
 
     <!-- Footer Checkout -->
-    <div class="p-6 border-t border-stone-200 bg-stone-50">
-      <div class="flex justify-between items-center text-xs text-stone-500 mb-1.5">
-        <span>Estimated Subtotal</span>
-        <span id="cart-subtotal" class="font-semibold text-stone-900">$0</span>
+    <div class="px-6 pt-5 bg-white border-t border-stone-200 shadow-[0_-8px_24px_-12px_rgba(31,21,16,0.15)]" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom));">
+      <div class="flex justify-between items-center text-sm text-stone-600 mb-2">
+        <span>Subtotal</span>
+        <span id="cart-subtotal" class="font-medium text-stone-900">0 Birr</span>
       </div>
-      <div class="flex justify-between items-center text-xs text-stone-500 mb-4">
+      <div class="flex justify-between items-center text-sm text-stone-600 mb-4">
         <span>Delivery</span>
-        <span class="text-emerald-700 font-medium">Calculated next step</span>
+        <span class="text-amber-800 font-medium">Free</span>
       </div>
-      <div class="flex justify-between items-center text-base font-serif text-stone-900 pt-3 border-t border-stone-200 mb-5">
-        <span>Total</span>
-        <span id="cart-total" class="font-semibold font-sans">$0</span>
+      <div class="flex justify-between items-baseline pt-4 border-t border-stone-200 mb-5">
+        <span class="font-serif text-xl text-stone-900">Total</span>
+        <span id="cart-total" class="font-semibold text-xl text-stone-900">0 Birr</span>
       </div>
       <button 
         id="checkout-btn" 
-        class="w-full py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
-        <i data-lucide="lock" class="w-4 h-4"></i> Proceed to Checkout
+        class="w-full py-4 bg-stone-900 hover:bg-amber-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2">
+        Proceed to Checkout <i data-lucide="arrow-right" class="w-4 h-4"></i>
       </button>
-      <p class="text-[10px] text-center text-stone-400 mt-3 flex items-center justify-center gap-1">
-        <i data-lucide="shield" class="w-3 h-3"></i> Encrypted 256-bit SSL Checkout
+      <p class="text-[11px] text-center text-stone-500 mt-3">
+        Pay by CBE Bank or Telebirr transfer
       </p>
     </div>
   </div>
@@ -736,160 +781,167 @@
   <!-- ========================================================================= -->
   <div id="checkout-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-6">
     <div id="checkout-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
-    
-    <div class="relative bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl z-10 border border-stone-200">
-      <div class="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-3 sm:hidden"></div>
-      
-      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-            <i data-lucide="send" class="w-4 h-4"></i>
-          </div>
+
+    <div class="relative bg-stone-50 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl z-10">
+
+      <!-- Header -->
+      <div class="sticky top-0 z-20 bg-stone-900 text-white px-6 pt-5 pb-4">
+        <div class="w-10 h-1 bg-white/25 rounded-full mx-auto mb-3 sm:hidden"></div>
+        <div class="flex items-start justify-between">
           <div>
-            <h3 class="font-serif text-xl text-stone-900 leading-none">Confirm Delivery & Pay</h3>
-            <span class="text-[10px] text-stone-500 uppercase tracking-wider font-medium">Direct Verification · Moke Furniture Studio</span>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-amber-300 mb-1">Moke Furniture</p>
+            <h3 class="font-serif text-3xl leading-none">Checkout</h3>
+            <p class="text-xs text-white/60 mt-1.5">Pay by transfer, upload your receipt, and we confirm your order.</p>
           </div>
-        </div>
-        <button id="close-checkout-btn" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition" aria-label="Close checkout">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- Order Mini Summary -->
-      <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 mb-5 text-xs">
-        <div class="flex justify-between items-center text-stone-500 mb-1.5">
-          <span>Order Items:</span>
-          <span id="checkout-item-count" class="font-semibold text-stone-900">0 items</span>
-        </div>
-        <div class="flex justify-between items-center text-stone-500 mb-2">
-          <span>Total Order Value:</span>
-          <span id="checkout-total-val" class="font-bold text-stone-900 text-sm">$0</span>
-        </div>
-        <div id="checkout-delivery-badge" class="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60 flex items-center gap-2">
-          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-          <span id="checkout-delivery-text">Complimentary White-Glove In-Home Assembly included</span>
-        </div>
-      </div>
-
-      <!-- Bank & Mobile Payment Options (CBE & Telebirr) -->
-      <div class="mb-5">
-        <div class="flex items-center justify-between mb-2">
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700">Select Payment Method (100% Full Payment) *</label>
-          <span class="text-[10px] font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md">Full Payment Required</span>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-2.5 mb-3">
-          <button 
-            type="button" 
-            id="pay-cbe-btn" 
-            onclick="selectPaymentMethod('cbe')" 
-            class="p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-900 bg-stone-900 text-white shadow-sm">
-            <div class="flex items-center justify-between w-full mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider">🏛️ CBE Bank</span>
-              <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
-            </div>
-            <span class="text-[10px] text-stone-300">Commercial Bank of Ethiopia</span>
-          </button>
-
-          <button 
-            type="button" 
-            id="pay-telebirr-btn" 
-            onclick="selectPaymentMethod('telebirr')" 
-            class="p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white">
-            <div class="flex items-center justify-between w-full mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider">📱 Telebirr</span>
-              <i data-lucide="circle" class="w-3.5 h-3.5 text-stone-300"></i>
-            </div>
-            <span class="text-[10px] text-stone-500">Ethio Telecom Mobile Money</span>
+          <button id="close-checkout-btn" class="p-2 -mr-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition" aria-label="Close checkout">
+            <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
-
-        <!-- CBE Account Details Box -->
-        <div id="cbe-details-box" class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-stone-500 font-medium text-[11px]">CBE Account Number:</span>
-            <button type="button" onclick="copyToClipboard('100000838', this)" class="text-[10px] font-semibold text-stone-900 bg-white border border-stone-300 hover:bg-stone-100 px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm transition">
-              <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
-            </button>
-          </div>
-          <div class="font-mono text-base font-bold text-stone-900 tracking-wider mb-1">100000838</div>
-          <div class="text-[11px] text-stone-600">Account Name: <strong>Moke Furniture Studio</strong></div>
-          <p class="text-[10px] text-amber-900 mt-2 font-medium">⚠️ Please make full transfer, then attach screenshot below before dispatch.</p>
-        </div>
-
-        <!-- Telebirr Account Details Box -->
-        <div id="telebirr-details-box" class="hidden p-3.5 rounded-2xl bg-sky-50/80 border border-sky-200 text-xs">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-stone-500 font-medium text-[11px]">Telebirr Number:</span>
-            <button type="button" onclick="copyToClipboard('28398387', this)" class="text-[10px] font-semibold text-stone-900 bg-white border border-stone-300 hover:bg-stone-100 px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm transition">
-              <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
-            </button>
-          </div>
-          <div class="font-mono text-base font-bold text-stone-900 tracking-wider mb-1">28398387</div>
-          <div class="text-[11px] text-stone-600">Merchant / Account: <strong>Moke Furniture</strong></div>
-          <p class="text-[10px] text-sky-900 mt-2 font-medium">⚠️ Please make full transfer, then attach screenshot below before dispatch.</p>
-        </div>
       </div>
 
-      <!-- Payment Screenshot Upload Box -->
-      <div class="mb-5">
-        <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1.5">Upload Payment Screenshot / Transfer Receipt *</label>
-        
-        <div id="screenshot-dropzone" class="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-2xl p-4 text-center cursor-pointer transition bg-stone-50/60 relative">
-          <input type="file" id="receipt-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="handleReceiptUpload(event)" />
-          
-          <div id="receipt-prompt" class="flex flex-col items-center justify-center py-2">
-            <div class="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 mb-2">
-              <i data-lucide="upload" class="w-5 h-5"></i>
-            </div>
-            <p class="text-xs font-semibold text-stone-800 mb-0.5">Click or tap to upload receipt screenshot</p>
-            <p class="text-[10px] text-stone-500">Supports PNG, JPG, or screenshot from phone gallery</p>
+      <div class="p-6 space-y-6">
+
+        <!-- Order summary -->
+        <div class="bg-white rounded-2xl p-4 border border-stone-200">
+          <div class="flex justify-between items-center text-sm text-stone-500 mb-1.5">
+            <span>Items</span>
+            <span id="checkout-item-count" class="font-medium text-stone-900">0 items</span>
+          </div>
+          <div class="flex justify-between items-baseline pb-3 border-b border-stone-100">
+            <span class="text-sm text-stone-500">Total to pay</span>
+            <span id="checkout-total-val" class="font-semibold text-xl text-stone-900">0 Birr</span>
+          </div>
+          <div id="checkout-delivery-badge" class="mt-3 text-xs text-amber-900 flex items-center gap-2">
+            <i data-lucide="truck" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span id="checkout-delivery-text">Free delivery on all orders</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Payment -->
+        <div>
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="w-6 h-6 rounded-full bg-stone-900 text-white text-xs font-semibold flex items-center justify-center">1</span>
+            <h4 class="text-sm font-semibold text-stone-900">Choose how to pay</h4>
+            <span class="ml-auto text-[10px] font-semibold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">Full payment</span>
           </div>
 
-          <!-- Preview when selected -->
-          <div id="receipt-preview-container" class="hidden flex items-center gap-3 text-left">
-            <img id="receipt-preview-img" src="" alt="Payment Receipt" class="w-16 h-16 object-cover rounded-xl border border-stone-300 shrink-0" />
-            <div class="flex-grow overflow-hidden">
-              <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
-                <i data-lucide="check-circle" class="w-3 h-3"></i> Screenshot Ready
-              </span>
-              <p id="receipt-file-name" class="text-xs font-medium text-stone-900 truncate">screenshot.jpg</p>
-              <button type="button" onclick="removeReceipt(event)" class="text-[10px] text-red-600 hover:underline mt-0.5 block">Remove or replace</button>
+          <div class="grid grid-cols-2 gap-2.5 mb-3">
+            <button
+              type="button"
+              id="pay-cbe-btn"
+              onclick="selectPaymentMethod('cbe')"
+              class="p-3.5 rounded-xl border-2 text-left transition flex flex-col justify-between border-amber-800 bg-amber-50 text-stone-900">
+              <div class="flex items-center justify-between w-full mb-1">
+                <span class="text-xs font-bold uppercase tracking-wider">CBE Bank</span>
+                <i data-lucide="check-circle" class="w-4 h-4 text-amber-800"></i>
+              </div>
+              <span class="text-[11px] text-stone-500">Commercial Bank of Ethiopia</span>
+            </button>
+
+            <button
+              type="button"
+              id="pay-telebirr-btn"
+              onclick="selectPaymentMethod('telebirr')"
+              class="p-3.5 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white">
+              <div class="flex items-center justify-between w-full mb-1">
+                <span class="text-xs font-bold uppercase tracking-wider">Telebirr</span>
+                <i data-lucide="circle" class="w-4 h-4 text-stone-300"></i>
+              </div>
+              <span class="text-[11px] text-stone-500">Ethio Telecom Mobile Money</span>
+            </button>
+          </div>
+
+          <!-- CBE details -->
+          <div id="cbe-details-box" class="p-4 rounded-2xl bg-white border border-stone-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-stone-500">CBE account number</span>
+              <button type="button" onclick="copyToClipboard('100000838', this)" class="text-[11px] font-semibold text-stone-900 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
+              </button>
+            </div>
+            <div class="font-mono text-xl font-semibold text-stone-900 tracking-wider">100000838</div>
+            <div class="text-xs text-stone-600 mt-1">Account name: <strong>Moke Furniture Studio</strong></div>
+            <p class="text-[11px] text-stone-500 mt-3 pt-3 border-t border-stone-100">Transfer the full amount, then upload your receipt below.</p>
+          </div>
+
+          <!-- Telebirr details -->
+          <div id="telebirr-details-box" class="hidden p-4 rounded-2xl bg-white border border-stone-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-stone-500">Telebirr number</span>
+              <button type="button" onclick="copyToClipboard('28398387', this)" class="text-[11px] font-semibold text-stone-900 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
+              </button>
+            </div>
+            <div class="font-mono text-xl font-semibold text-stone-900 tracking-wider">28398387</div>
+            <div class="text-xs text-stone-600 mt-1">Merchant: <strong>Moke Furniture</strong></div>
+            <p class="text-[11px] text-stone-500 mt-3 pt-3 border-t border-stone-100">Transfer the full amount, then upload your receipt below.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Receipt -->
+        <div>
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="w-6 h-6 rounded-full bg-stone-900 text-white text-xs font-semibold flex items-center justify-center">2</span>
+            <h4 class="text-sm font-semibold text-stone-900">Upload your payment receipt <span class="text-amber-700">*</span></h4>
+          </div>
+
+          <div id="screenshot-dropzone" class="border-2 border-dashed border-stone-300 hover:border-amber-800 rounded-2xl p-4 text-center cursor-pointer transition bg-white relative">
+            <input type="file" id="receipt-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="handleReceiptUpload(event)" />
+
+            <div id="receipt-prompt" class="flex flex-col items-center justify-center py-3">
+              <div class="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center text-amber-800 mb-2">
+                <i data-lucide="upload" class="w-5 h-5"></i>
+              </div>
+              <p class="text-sm font-semibold text-stone-800 mb-0.5">Tap to upload a screenshot</p>
+              <p class="text-[11px] text-stone-500">PNG or JPG from your phone gallery</p>
+            </div>
+
+            <div id="receipt-preview-container" class="hidden flex items-center gap-3 text-left">
+              <img id="receipt-preview-img" src="" alt="Payment Receipt" class="w-16 h-16 object-cover rounded-xl border border-stone-300 shrink-0" />
+              <div class="flex-grow overflow-hidden">
+                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                  <i data-lucide="check-circle" class="w-3 h-3"></i> Receipt ready
+                </span>
+                <p id="receipt-file-name" class="text-xs font-medium text-stone-900 truncate">screenshot.jpg</p>
+                <button type="button" onclick="removeReceipt(event)" class="text-[11px] text-red-600 hover:underline mt-0.5 block relative z-10">Remove or replace</button>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Step 3: Delivery details -->
+        <form id="checkout-form" class="space-y-4">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-stone-900 text-white text-xs font-semibold flex items-center justify-center">3</span>
+            <h4 class="text-sm font-semibold text-stone-900">Delivery details</h4>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Full name *</label>
+            <input type="text" id="cust-name" required placeholder="Your full name" class="w-full px-4 py-3 text-sm rounded-xl bg-white border border-stone-300 placeholder-stone-400 focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800 transition" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Phone number *</label>
+            <input type="tel" id="cust-phone" required placeholder="e.g. 0911234567" class="w-full px-4 py-3 text-sm rounded-xl bg-white border border-stone-300 placeholder-stone-400 focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800 transition" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Delivery address &amp; city *</label>
+            <textarea id="cust-address" required rows="2" placeholder="Area, street or landmark, house number, city" class="w-full px-4 py-3 text-sm rounded-xl bg-white border border-stone-300 placeholder-stone-400 focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800 transition"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Delivery notes <span class="normal-case font-normal text-stone-400">(optional)</span></label>
+            <input type="text" id="cust-notes" placeholder="e.g. 2nd floor, call before arriving" class="w-full px-4 py-3 text-sm rounded-xl bg-white border border-stone-300 placeholder-stone-400 focus:outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800 transition" />
+          </div>
+
+          <button type="submit" id="checkout-submit-btn" class="w-full py-4 px-4 bg-amber-800 hover:bg-amber-900 disabled:opacity-60 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-md transition flex items-center justify-center gap-2 mt-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Place Order
+          </button>
+          <p class="text-[11px] text-center text-stone-500">We verify your payment and then contact you on your phone.</p>
+        </form>
       </div>
-
-      <!-- Customer Form Fields -->
-      <form id="checkout-form" class="space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Your Full Name *</label>
-          <input type="text" id="cust-name" required placeholder="e.g. Alex Morgan" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Phone Number *</label>
-          <input type="tel" id="cust-phone" required placeholder="e.g. 0911234567" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Delivery Address & City *</label>
-          <textarea id="cust-address" required rows="2" placeholder="e.g. Bole Medhanialem, Atlas area, House #402, Addis Ababa" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-stone-700 mb-1">Delivery Notes (Optional)</label>
-          <input type="text" id="cust-notes" placeholder="e.g. 2nd floor, call before arriving" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900" />
-        </div>
-
-        <button type="submit" id="checkout-submit-btn" class="w-full py-4 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 mt-4">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Place Order & Submit Payment Proof
-        </button>
-      </form>
-      
-      <p class="text-[10px] text-center text-stone-400 mt-3 flex items-center justify-center gap-1.5">
-        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i> Direct verification with Moke Furniture Studio
-      </p>
     </div>
   </div>
 
@@ -1034,21 +1086,22 @@
   <!-- CUSTOMER ORDERS & STATUS TRACKING MODAL                                   -->
   <!-- ========================================================================= -->
   <div id="customer-orders-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div id="orders-backdrop" onclick="closeOrdersModal()" class="fixed inset-0 bg-stone-950/70 backdrop-blur-sm transition-opacity"></div>
-    
-    <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 z-10 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-      <div class="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+    <div id="orders-backdrop" onclick="closeOrdersModal()" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="relative bg-stone-50 rounded-3xl max-w-2xl w-full shadow-2xl z-10 max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="bg-stone-900 text-white px-6 sm:px-8 pt-6 pb-5 flex items-start justify-between shrink-0">
         <div>
-          <h3 class="font-serif text-2xl text-stone-900">My Orders & Status</h3>
-          <p class="text-xs text-stone-500">Live order status and studio verification</p>
+          <p class="text-[10px] uppercase tracking-[0.25em] text-amber-300 mb-1">Moke Furniture</p>
+          <h3 class="font-serif text-3xl leading-none">My Orders</h3>
+          <p class="text-xs text-white/60 mt-1.5">Track your payment verification and delivery</p>
         </div>
-        <button onclick="closeOrdersModal()" class="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition" aria-label="Close modal">
+        <button onclick="closeOrdersModal()" class="p-2 -mr-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition" aria-label="Close">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
       <!-- Real-time orders container -->
-      <div id="customer-orders-list" class="space-y-4">
+      <div id="customer-orders-list" class="space-y-4 p-6 sm:p-8 overflow-y-auto">
         <!-- Rendered dynamically -->
       </div>
     </div>

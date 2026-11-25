@@ -18,7 +18,6 @@ const state = {
   activeQuickView: null,
   selectedColorIndex: 0,
   quickViewQty: 1,
-  viewMode3D: false
 };
 
 // Independent Section State (Option B: Starts with 6 pieces directly)
@@ -141,53 +140,27 @@ function selectPaymentMethod(method) {
   const cbeBox = document.getElementById('cbe-details-box');
   const telebirrBox = document.getElementById('telebirr-details-box');
 
-  if (method === 'cbe') {
-    if (cbeBtn) {
-      cbeBtn.className = 'p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-900 bg-stone-900 text-white shadow-sm';
-      cbeBtn.innerHTML = `
-        <div class="flex items-center justify-between w-full mb-1">
-          <span class="text-xs font-bold uppercase tracking-wider">🏛️ CBE Bank</span>
-          <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
-        </div>
-        <span class="text-[10px] text-stone-300">Commercial Bank of Ethiopia</span>
-      `;
-    }
-    if (telebirrBtn) {
-      telebirrBtn.className = 'p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white';
-      telebirrBtn.innerHTML = `
-        <div class="flex items-center justify-between w-full mb-1">
-          <span class="text-xs font-bold uppercase tracking-wider">📱 Telebirr</span>
-          <i data-lucide="circle" class="w-3.5 h-3.5 text-stone-300"></i>
-        </div>
-        <span class="text-[10px] text-stone-500">Ethio Telecom Mobile Money</span>
-      `;
-    }
-    if (cbeBox) cbeBox.classList.remove('hidden');
-    if (telebirrBox) telebirrBox.classList.add('hidden');
-  } else {
-    if (cbeBtn) {
-      cbeBtn.className = 'p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white';
-      cbeBtn.innerHTML = `
-        <div class="flex items-center justify-between w-full mb-1">
-          <span class="text-xs font-bold uppercase tracking-wider">🏛️ CBE Bank</span>
-          <i data-lucide="circle" class="w-3.5 h-3.5 text-stone-300"></i>
-        </div>
-        <span class="text-[10px] text-stone-500">Commercial Bank of Ethiopia</span>
-      `;
-    }
-    if (telebirrBtn) {
-      telebirrBtn.className = 'p-3 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-900 bg-stone-900 text-white shadow-sm';
-      telebirrBtn.innerHTML = `
-        <div class="flex items-center justify-between w-full mb-1">
-          <span class="text-xs font-bold uppercase tracking-wider">📱 Telebirr</span>
-          <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
-        </div>
-        <span class="text-[10px] text-stone-300">Ethio Telecom Mobile Money</span>
-      `;
-    }
-    if (cbeBox) cbeBox.classList.add('hidden');
-    if (telebirrBox) telebirrBox.classList.remove('hidden');
+  const ON = 'p-3.5 rounded-xl border-2 text-left transition flex flex-col justify-between border-amber-800 bg-amber-50 text-stone-900';
+  const OFF = 'p-3.5 rounded-xl border-2 text-left transition flex flex-col justify-between border-stone-200 hover:border-stone-400 text-stone-800 bg-white';
+  const btnHTML = (name, sub, on) => `
+    <div class="flex items-center justify-between w-full mb-1">
+      <span class="text-xs font-bold uppercase tracking-wider">${name}</span>
+      <i data-lucide="${on ? 'check-circle' : 'circle'}" class="w-4 h-4 ${on ? 'text-amber-800' : 'text-stone-300'}"></i>
+    </div>
+    <span class="text-[11px] text-stone-500">${sub}</span>
+  `;
+
+  const isCbe = method === 'cbe';
+  if (cbeBtn) {
+    cbeBtn.className = isCbe ? ON : OFF;
+    cbeBtn.innerHTML = btnHTML('CBE Bank', 'Commercial Bank of Ethiopia', isCbe);
   }
+  if (telebirrBtn) {
+    telebirrBtn.className = isCbe ? OFF : ON;
+    telebirrBtn.innerHTML = btnHTML('Telebirr', 'Ethio Telecom Mobile Money', !isCbe);
+  }
+  if (cbeBox) cbeBox.classList.toggle('hidden', !isCbe);
+  if (telebirrBox) telebirrBox.classList.toggle('hidden', isCbe);
   setupIcons();
 }
 
@@ -261,7 +234,7 @@ function openCheckoutModal() {
   if (checkoutItemCount) checkoutItemCount.textContent = `${totalCount} piece${totalCount > 1 ? 's' : ''}`;
   if (checkoutTotalVal) checkoutTotalVal.textContent = `${subtotal.toLocaleString()} Birr`;
   if (checkoutDeliveryText) {
-    checkoutDeliveryText.textContent = '🚚 Free Delivery on All Orders — White-Glove Assembly Included';
+    checkoutDeliveryText.textContent = 'Free delivery on all orders, assembly included';
   }
   
   if (checkoutModal) checkoutModal.classList.remove('hidden');
@@ -317,7 +290,7 @@ async function handleCheckoutSubmit(e) {
   
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Submitting & Uploading Payment Proof...`;
+    submitBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Submitting your order...`;
     setupIcons();
   }
 
@@ -385,7 +358,7 @@ async function handleCheckoutSubmit(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Place Order & Submit Payment Proof`;
+      submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Place Order`;
       setupIcons();
     }
   }
@@ -679,7 +652,7 @@ function renderCustomerOrdersList(orders) {
     container.innerHTML = `
       <div class="text-center py-12 px-4 bg-stone-50 rounded-2xl border border-stone-200">
         <i data-lucide="package-open" class="w-12 h-12 text-stone-300 mx-auto mb-3"></i>
-        <h4 class="text-base font-serif text-stone-800">No Orders Placed Yet</h4>
+        <h4 class="text-xl font-serif text-stone-900">No orders yet</h4>
         <p class="text-xs text-stone-500 mt-1 max-w-sm mx-auto">When you order handcrafted pieces and upload your payment proof, you can track studio approval here in real time.</p>
       </div>
     `;
@@ -696,61 +669,85 @@ function renderCustomerOrdersList(orders) {
     let statusBanner = '';
 
     if (isPending) {
-      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300">
-        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-        🟡 Pending Verification
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-amber-100 text-amber-900">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Pending verification
       </span>`;
       statusBanner = `
-        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
           <i data-lucide="clock" class="w-4 h-4 text-amber-700 shrink-0 mt-0.5"></i>
           <div>
-            <strong class="font-semibold">Payment Screenshot Received</strong>
-            <p class="text-[11px] text-amber-800 mt-0.5">Our studio manager is verifying your bank transfer. Once confirmed, your order status will automatically change here.</p>
+            <strong class="font-semibold">Receipt received</strong>
+            <p class="text-[11px] text-amber-800 mt-0.5">We are checking your transfer. This page updates automatically once your order is confirmed.</p>
           </div>
         </div>
       `;
     } else if (isApproved) {
-      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
-        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
-        ✅ Confirmed & Approved
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+        <i data-lucide="check" class="w-3 h-3"></i> Confirmed
       </span>`;
       statusBanner = `
-        <div class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-950 flex items-start gap-2.5">
-          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-950 flex items-start gap-2.5">
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
           <div>
-            <strong class="font-semibold text-emerald-900">Order Confirmed!</strong>
-            <p class="text-[11px] text-emerald-800 mt-0.5">${order.statusNote || 'We will contact you soon on your phone to arrange white-glove delivery.'}</p>
+            <strong class="font-semibold text-emerald-900">Order confirmed</strong>
+            <p class="text-[11px] text-emerald-800 mt-0.5">${order.statusNote || 'We will contact you soon on your phone to arrange delivery.'}</p>
           </div>
         </div>
       `;
     } else {
-      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-800 border border-red-300">
-        <i data-lucide="x-circle" class="w-3.5 h-3.5 text-red-600"></i>
-        ❌ Rejected
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-red-100 text-red-800">
+        <i data-lucide="x" class="w-3 h-3"></i> Not verified
       </span>`;
       statusBanner = `
-        <div class="bg-red-50/80 border border-red-200 rounded-xl p-3 text-xs text-red-950 flex items-start gap-2.5">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-3.5 text-xs text-red-950 flex items-start gap-2.5">
           <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 shrink-0 mt-0.5"></i>
           <div>
-            <strong class="font-semibold text-red-900">Payment Not Verified</strong>
-            <p class="text-[11px] text-red-800 mt-0.5">${order.statusNote || 'The payment screenshot could not be confirmed with the bank account. Please check your transfer or reach out to our team.'}</p>
+            <strong class="font-semibold text-red-900">Payment could not be verified</strong>
+            <p class="text-[11px] text-red-800 mt-0.5">${order.statusNote || 'We could not confirm your transfer. Please check it and contact our team.'}</p>
           </div>
         </div>
       `;
     }
 
+    // Progress steps: Placed -> Payment check -> Confirmed
+    const stepDone = 'bg-stone-900 text-white';
+    const stepNow = 'bg-amber-700 text-white ring-4 ring-amber-100';
+    const stepOff = 'bg-stone-200 text-stone-400';
+    const s1 = stepDone;
+    const s2 = isPending ? stepNow : (isApproved ? stepDone : 'bg-red-600 text-white');
+    const s3 = isApproved ? stepDone : stepOff;
+    const line2 = isApproved ? 'bg-stone-900' : 'bg-stone-200';
+    const steps = `
+      <div class="flex items-center">
+        <div class="flex flex-col items-center gap-1 w-16">
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${s1}">1</span>
+          <span class="text-[10px] text-stone-500">Placed</span>
+        </div>
+        <div class="flex-1 h-0.5 -mt-4 ${isPending || isApproved || isRejected ? 'bg-stone-900' : 'bg-stone-200'}"></div>
+        <div class="flex flex-col items-center gap-1 w-16">
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${s2}">2</span>
+          <span class="text-[10px] text-stone-500">Payment</span>
+        </div>
+        <div class="flex-1 h-0.5 -mt-4 ${line2}"></div>
+        <div class="flex flex-col items-center gap-1 w-16">
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${s3}">3</span>
+          <span class="text-[10px] text-stone-500">Confirmed</span>
+        </div>
+      </div>
+    `;
+
     const itemsList = (order.items || []).map(i => `
-      <div class="flex items-center justify-between text-xs py-1 border-b border-stone-100 last:border-0">
-        <span class="text-stone-700">${i.quantity}x ${i.name} (${i.color || 'Standard'})</span>
-        <span class="font-mono font-medium text-stone-900">${(i.price * i.quantity).toLocaleString()} Birr</span>
+      <div class="flex items-center justify-between text-sm py-2">
+        <span class="text-stone-700">${i.quantity} &times; ${i.name} <span class="text-stone-400">(${i.color || 'Standard'})</span></span>
+        <span class="font-medium text-stone-900 whitespace-nowrap ml-3">${(i.price * i.quantity).toLocaleString()} Birr</span>
       </div>
     `).join('');
 
     const formattedDate = order.createdAt ? new Date(order.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent';
 
     return `
-      <div class="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3.5">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-3">
+      <div class="p-5 bg-white rounded-2xl border border-stone-200 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <span class="text-[10px] text-stone-400 uppercase tracking-widest font-semibold block">Order #${order.id.slice(0, 8)}</span>
             <span class="text-xs text-stone-500">${formattedDate}</span>
@@ -758,24 +755,26 @@ function renderCustomerOrdersList(orders) {
           <div>${statusBadge}</div>
         </div>
 
+        ${steps}
+
         ${statusBanner}
 
-        <div class="bg-white rounded-xl p-3 border border-stone-200">
-          <div class="text-[10px] text-stone-400 uppercase tracking-wider font-semibold mb-2">Pieces Ordered</div>
+        <div>
+          <div class="text-[10px] text-stone-400 uppercase tracking-widest font-semibold mb-1">Pieces ordered</div>
           <div class="divide-y divide-stone-100">${itemsList}</div>
-          <div class="flex justify-between items-center pt-2 mt-2 border-t border-stone-200 text-xs font-semibold text-stone-900">
-            <span>Total Amount:</span>
-            <span class="text-sm font-mono text-stone-900">${(order.subtotal || 0).toLocaleString()} Birr</span>
+          <div class="flex justify-between items-baseline pt-3 mt-1 border-t border-stone-200">
+            <span class="text-sm font-semibold text-stone-900">Total</span>
+            <span class="text-lg font-semibold text-stone-900">${(order.subtotal || 0).toLocaleString()} Birr</span>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between text-xs text-stone-600 gap-2 pt-1">
+        <div class="flex flex-wrap items-center justify-between text-xs text-stone-600 gap-2">
           <div>
-            <span class="font-medium text-stone-800">Payment:</span> ${order.paymentMethod || 'Bank Transfer'}
+            <span class="font-medium text-stone-800">Paid by:</span> ${order.paymentMethod || 'Bank transfer'}
           </div>
           ${order.receiptUrl ? `
-            <a href="${order.receiptUrl}" target="_blank" class="inline-flex items-center gap-1 text-stone-800 hover:underline font-medium">
-              <i data-lucide="image" class="w-3.5 h-3.5"></i> View Uploaded Screenshot
+            <a href="${order.receiptUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-amber-800 hover:underline font-medium">
+              <i data-lucide="image" class="w-3.5 h-3.5"></i> View receipt
             </a>
           ` : ''}
         </div>
@@ -894,15 +893,6 @@ function renderSection(category) {
             ` : ''}
           </div>
 
-          ${product.model3d ? `
-            <button 
-              onclick="event.stopPropagation(); openQuickView3D('${product.id}')"
-              class="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 px-2.5 py-1 text-[9px] sm:text-[11px] font-semibold tracking-wider uppercase bg-stone-900/90 hover:bg-black text-white rounded-full shadow-md backdrop-blur-sm transition flex items-center gap-1 z-10"
-              title="Interactive 3D View">
-              <i data-lucide="box" class="w-3.5 h-3.5 text-amber-300"></i> 3D
-            </button>
-          ` : ''}
-
           <!-- Quick View Hover Button (Desktop Only) -->
           <div class="hidden sm:flex absolute inset-x-4 bottom-4 z-10 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 gap-2">
             <button 
@@ -987,32 +977,10 @@ function openQuickView(productId) {
   state.activeQuickView = product;
   state.selectedColorIndex = 0;
   state.quickViewQty = 1;
-  state.viewMode3D = false;
 
   renderQuickViewModal();
   quickViewModal.classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
-  setupIcons();
-}
-
-function openQuickView3D(productId) {
-  const product = activeProducts.find(p => p.id === productId);
-  if (!product) return;
-
-  state.activeQuickView = product;
-  state.selectedColorIndex = 0;
-  state.quickViewQty = 1;
-  state.viewMode3D = true;
-
-  renderQuickViewModal();
-  quickViewModal.classList.remove('hidden');
-  document.body.classList.add('overflow-hidden');
-  setupIcons();
-}
-
-function setQuickViewMode(is3D) {
-  state.viewMode3D = is3D;
-  renderQuickViewModal();
   setupIcons();
 }
 
@@ -1026,45 +994,13 @@ function renderQuickViewModal() {
   if (!product) return;
 
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
-  const klarna = Math.round(product.price / 4);
 
   quickViewContent.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
       <!-- Media Column (Slide-up Option A Bottom Sheet on Mobile) -->
       <div class="flex flex-col gap-2.5 sm:gap-3">
-        <!-- 3D Toggle Buttons (If 3D model available) -->
-        ${product.model3d ? `
-          <div class="flex items-center gap-1.5 sm:gap-2 bg-stone-100 p-1 sm:p-1.5 rounded-xl w-fit">
-            <button 
-              onclick="setQuickViewMode(false)" 
-              class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition ${!state.viewMode3D ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}">
-              📷 Photos
-            </button>
-            <button 
-              onclick="setQuickViewMode(true)" 
-              class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 ${state.viewMode3D ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}">
-              <i data-lucide="box" class="w-3.5 h-3.5 text-amber-400"></i> 3D (360°)
-            </button>
-          </div>
-        ` : ''}
-
         <div class="relative w-full h-48 sm:h-auto sm:aspect-square rounded-2xl overflow-hidden bg-stone-100 border border-stone-200">
-          ${product.model3d && state.viewMode3D ? `
-            <model-viewer 
-              src="${product.model3d}" 
-              alt="${product.name} 3D Model" 
-              auto-rotate 
-              camera-controls 
-              ar 
-              shadow-intensity="1.5" 
-              exposure="1.0"
-              class="w-full h-full min-h-[190px] sm:min-h-[360px] bg-stone-100 cursor-grab active:cursor-grabbing">
-              <div slot="ar-button" class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-stone-900 text-white px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-medium uppercase tracking-wider flex items-center gap-1.5 shadow-xl hover:bg-black transition cursor-pointer">
-                <i data-lucide="camera" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> View in Room (AR)
-              </div>
-            </model-viewer>
-          ` : `
-            <img 
+                      <img 
               src="${product.image}" 
               alt="${product.name}" 
               class="w-full h-full object-cover"
@@ -1074,7 +1010,7 @@ function renderQuickViewModal() {
                 ${product.tag}
               </span>
             </div>
-          `}
+          
         </div>
 
         <!-- Specifications Grid -->
@@ -1272,51 +1208,56 @@ function updateCartUI() {
     cartBadge.classList.toggle('opacity-0', totalCount === 0);
   }
 
+  const countLabel = document.getElementById('cart-count-label');
+  if (countLabel) countLabel.textContent = totalCount === 1 ? '1 item' : `${totalCount} items`;
+
   if (cartSubtotalEl) cartSubtotalEl.textContent = `${subtotal.toLocaleString()} Birr`;
   if (cartTotalEl) cartTotalEl.textContent = `${subtotal.toLocaleString()} Birr`;
 
   // Free delivery — always free for Moke
-  const threshold = 1500;
   if (freeShippingProgress && freeShippingText) {
     freeShippingProgress.style.width = `100%`;
-    freeShippingText.innerHTML = `<strong>🚚 Free Delivery on All Orders!</strong>`;
+    freeShippingText.innerHTML = `<strong>Free delivery on all orders</strong>`;
   }
 
   // Render items
   if (cartItemsContainer) {
     if (state.cart.length === 0) {
       cartItemsContainer.innerHTML = `
-        <div class="h-full flex flex-col items-center justify-center text-center p-8 text-stone-400">
-          <div class="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-3 text-stone-400">
-            <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+        <div class="h-full flex flex-col items-center justify-center text-center px-6 py-10">
+          <div class="w-20 h-20 rounded-full bg-white border border-stone-200 flex items-center justify-center mb-5 text-stone-400">
+            <i data-lucide="shopping-bag" class="w-9 h-9"></i>
           </div>
-          <p class="font-serif text-stone-800 text-lg mb-1">Your bag is empty</p>
-          <p class="text-xs text-stone-500 max-w-xs mb-6">Explore our curated sofas, chairs, and tables to start styling your home.</p>
-          <button onclick="closeCart()" class="px-5 py-2.5 bg-stone-900 text-white rounded-full text-xs font-medium uppercase tracking-wider hover:bg-stone-800 transition">
+          <p class="font-serif text-2xl text-stone-900 mb-1.5">Your bag is empty</p>
+          <p class="text-sm text-stone-500 max-w-xs mb-7">Explore our sofas, chairs and tables and add your favorite pieces.</p>
+          <button onclick="closeCart()" class="px-6 py-3 bg-stone-900 text-white rounded-full text-xs font-semibold uppercase tracking-widest hover:bg-amber-800 transition-colors duration-300">
             Continue Browsing
           </button>
         </div>
       `;
     } else {
       cartItemsContainer.innerHTML = state.cart.map((item, idx) => `
-        <div class="flex gap-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200/70">
-          <img src="${item.image}" alt="${item.name}" class="w-20 h-20 rounded-xl object-cover border border-stone-200 shrink-0" />
-          <div class="flex flex-col justify-between flex-grow">
+        <div class="flex gap-4 p-3 bg-white rounded-2xl border border-stone-200">
+          <img src="${item.image}" alt="${item.name}" class="w-24 h-24 rounded-xl object-cover bg-stone-100 shrink-0" />
+          <div class="flex flex-col justify-between flex-grow min-w-0">
             <div>
-              <div class="flex justify-between items-start">
-                <h4 class="font-serif text-sm font-medium text-stone-900 line-clamp-1">${item.name}</h4>
-                <button onclick="removeFromCart(${idx})" class="text-stone-400 hover:text-red-600 transition p-1">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              <div class="flex justify-between items-start gap-2">
+                <h4 class="font-serif text-base leading-snug text-stone-900 line-clamp-2">${item.name}</h4>
+                <button onclick="removeFromCart(${idx})" class="text-stone-400 hover:text-red-600 transition p-1 -mr-1 shrink-0" aria-label="Remove ${item.name}">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
               </div>
-              <p class="text-xs text-stone-500">${item.color}</p>
+              <p class="text-xs text-stone-500 mt-0.5">${item.color || ''}</p>
             </div>
             <div class="flex justify-between items-center mt-2">
-              <span class="font-semibold text-stone-900 text-sm">${(item.price * item.quantity).toLocaleString()} Birr</span>
-              <div class="flex items-center border border-stone-300 rounded-lg bg-white overflow-hidden">
-                <button onclick="updateCartItemQty(${idx}, -1)" class="px-2 py-1 hover:bg-stone-100 text-stone-600 text-xs font-semibold">-</button>
-                <span class="w-7 text-center font-medium text-xs text-stone-900">${item.quantity}</span>
-                <button onclick="updateCartItemQty(${idx}, 1)" class="px-2 py-1 hover:bg-stone-100 text-stone-600 text-xs font-semibold">+</button>
+              <div class="flex items-center gap-1 bg-stone-100 rounded-full p-0.5">
+                <button onclick="updateCartItemQty(${idx}, -1)" class="w-7 h-7 rounded-full hover:bg-white text-stone-700 text-sm font-semibold transition" aria-label="Decrease quantity">&minus;</button>
+                <span class="w-6 text-center font-semibold text-xs text-stone-900">${item.quantity}</span>
+                <button onclick="updateCartItemQty(${idx}, 1)" class="w-7 h-7 rounded-full hover:bg-white text-stone-700 text-sm font-semibold transition" aria-label="Increase quantity">+</button>
+              </div>
+              <div class="text-right">
+                <span class="font-semibold text-stone-900 text-sm block">${(item.price * item.quantity).toLocaleString()} Birr</span>
+                ${item.quantity > 1 ? `<span class="text-[11px] text-stone-400">${item.price.toLocaleString()} each</span>` : ''}
               </div>
             </div>
           </div>

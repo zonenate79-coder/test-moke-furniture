@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MOKE Product Studio | Catalog & 3D Manager</title>
+  <title>MOKE Product Studio | Catalog Manager</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,8 +28,6 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Google 3D & AR Model Viewer -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
   <style>
     .dropzone-active {
@@ -239,7 +237,7 @@
         <div class="flex items-center justify-between pb-4 mb-6 border-b border-stone-100">
           <div>
             <h2 id="form-heading" class="font-serif text-2xl text-stone-900">Add New Furniture Piece</h2>
-            <p class="text-xs text-stone-500 mt-0.5">Drag & drop your photo and 3D model, set price, and save to your live store.</p>
+            <p class="text-xs text-stone-500 mt-0.5">Drag & drop your photo, set price, and save to your live store.</p>
           </div>
           <button id="cancel-edit-btn" onclick="resetForm()" class="hidden px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 rounded-lg text-xs font-medium text-stone-600 transition">
             Cancel Edit
@@ -445,56 +443,6 @@
             </div>
           </div>
 
-          <!-- 3D MODEL SECTION WITH DRAG & DROP -->          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="text-xs uppercase tracking-wider font-bold text-amber-950 flex items-center gap-1.5">
-                <i data-lucide="box" class="w-4 h-4 text-amber-800"></i> Interactive 3D Model (.GLB)
-              </label>
-              <span class="text-[10px] text-amber-900 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">360° Drag & Drop</span>
-            </div>
-
-            <!-- 3D Drag & Drop Zone -->
-            <div 
-              id="model3d-dropzone" 
-              class="relative border-2 border-dashed border-amber-300 hover:border-amber-900 rounded-2xl p-5 text-center cursor-pointer transition bg-white/90 hover:bg-amber-100/40 group">
-              <input 
-                type="file" 
-                id="model3d-file-input" 
-                accept=".glb,.gltf" 
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                onchange="handle3DFile(this.files[0])" 
-              />
-              <div class="flex flex-col items-center gap-1.5 pointer-events-none">
-                <div class="w-10 h-10 rounded-full bg-amber-100 group-hover:bg-amber-900 group-hover:text-white flex items-center justify-center transition text-amber-900">
-                  <i data-lucide="box" class="w-5 h-5"></i>
-                </div>
-                <p class="text-xs font-semibold text-amber-950">Drag & drop your 3D model (.glb file) here</p>
-                <p class="text-[11px] text-amber-800/80">Uploads to Cloud Storage automatically so all customers see it</p>
-                <span id="model3d-filename-badge" class="hidden mt-1 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm"></span>
-              </div>
-            </div>
-
-            <!-- Paste 3D URL & Sample Buttons -->
-            <div class="flex flex-wrap items-center gap-2">
-              <input 
-                id="prod-3d" 
-                type="text" 
-                placeholder="Cloud .glb link (https://.../model.glb)" 
-                class="flex-1 min-w-[200px] px-3 py-2 bg-white border border-amber-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
-                oninput="updateLivePreview()"
-              />
-              <button type="button" onclick="document.getElementById('model3d-file-input').click()" class="px-3 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-medium whitespace-nowrap transition shadow-sm flex items-center gap-1">
-                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload / Replace 3D
-              </button>
-              <button type="button" onclick="insertSample3D()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium whitespace-nowrap transition">
-                Sample
-              </button>
-              <button type="button" onclick="clear3DModel()" class="px-2.5 py-2 text-stone-500 hover:text-red-700 text-xs font-medium transition" title="Remove 3D">
-                Clear
-              </button>
-            </div>
-          </div>
-
           <!-- Material & Filter Tag -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -567,18 +515,6 @@
           </div>
         </div>
 
-        <!-- 3D Interactive Model Preview Box -->
-        <div id="preview-3d-box" class="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hidden">
-          <div class="flex items-center justify-between mb-3 pb-2 border-b border-stone-100">
-            <h3 class="font-serif text-lg text-stone-900 flex items-center gap-1.5">
-              <i data-lucide="box" class="w-4 h-4 text-amber-700"></i> 3D Rotation Test
-            </h3>
-            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Grab & Spin Active</span>
-          </div>
-          <div id="preview-3d-slot" class="w-full aspect-square rounded-2xl bg-stone-100 overflow-hidden border border-stone-200">
-            <!-- Injected model-viewer -->
-          </div>
-        </div>
       </div>
     </div>
 
@@ -664,7 +600,6 @@
     // Setup Drag and Drop events
     function setupDragAndDrop() {
       const photoZone = document.getElementById('photo-dropzone');
-      const modelZone = document.getElementById('model3d-dropzone');
 
       // Photo dropzone
       if (photoZone) {
@@ -688,27 +623,6 @@
         });
       }
 
-      // 3D Model dropzone
-      if (modelZone) {
-        ['dragenter', 'dragover'].forEach(eventName => {
-          modelZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            modelZone.classList.add('dropzone-active');
-          });
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-          modelZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            modelZone.classList.remove('dropzone-active');
-          });
-        });
-        modelZone.addEventListener('drop', (e) => {
-          const files = e.dataTransfer.files;
-          if (files && files[0]) {
-            handle3DFile(files[0]);
-          }
-        });
-      }
     }
 
     // ==========================================
@@ -906,68 +820,8 @@
       updateLivePreview();
     }
 
-    // Handle Dropped or Selected 3D GLB File (Uploads to Cloud Storage)
-    async function handle3DFile(file) {
-      if (!file) return;
-      if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
-        alert('Please select a 3D model file ending in .glb or .gltf');
-        return;
-      }
-
-      const badge = document.getElementById('model3d-filename-badge');
-      const input = document.getElementById('prod-3d');
-      if (badge) {
-        badge.className = 'mt-2 text-[11px] text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block animate-pulse';
-        badge.textContent = `⏳ Uploading ${file.name} to Cloud Storage...`;
-        badge.classList.remove('hidden');
-      }
-
-      try {
-        if (window.MokeCloud && typeof MokeCloud.upload3DModel === 'function') {
-          const cloudUrl = await MokeCloud.upload3DModel(file, (percent) => {
-            if (badge) badge.textContent = `⏳ Uploading 3D to Cloud (${percent}%)...`;
-          });
-          input.value = cloudUrl;
-          if (badge) {
-            badge.className = 'mt-2 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
-            badge.textContent = `✅ 3D Cloud Ready: ${file.name}`;
-          }
-          updateLivePreview();
-        } else {
-          // Fallback to local data reader
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            input.value = e.target.result;
-            if (badge) {
-              badge.className = 'mt-2 text-[11px] text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-medium shadow-sm inline-block';
-              badge.textContent = `✅ Attached: ${file.name}`;
-            }
-            updateLivePreview();
-          };
-          reader.readAsDataURL(file);
-        }
-      } catch (err) {
-        console.error('3D Upload Error:', err);
-        alert('Could not upload 3D file: ' + (err.message || err));
-        if (badge) badge.classList.add('hidden');
-      }
-    }
-
-    function clear3DModel() {
-      document.getElementById('prod-3d').value = '';
-      const badge = document.getElementById('model3d-filename-badge');
-      if (badge) {
-        badge.textContent = '';
-        badge.classList.add('hidden');
-      }
-      const fileInput = document.getElementById('model3d-file-input');
-      if (fileInput) fileInput.value = '';
-      updateLivePreview();
-    }
-
     function updateStats() {
-      const with3D = catalog.filter(p => p.model3d).length;
-      document.getElementById('product-stats').textContent = `${catalog.length} Pieces | ${with3D} with 3D`;
+      document.getElementById('product-stats').textContent = `${catalog.length} Pieces`;
     }
 
     function saveToStorage() {
@@ -1045,7 +899,6 @@
                 <span class="text-[9px] uppercase tracking-wider font-semibold text-stone-400">${item.category}</span>
                 <div class="flex items-center gap-1">
                   ${item.hidden ? '<span class="text-[9px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded">Hidden</span>' : '<span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">Live</span>'}
-                  ${item.model3d ? '<span class="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="box" class="w-2.5 h-2.5"></i> 3D</span>' : ''}
                 </div>
               </div>
               <h4 class="font-serif text-sm text-stone-900 line-clamp-1">${item.name}</h4>
@@ -1094,7 +947,6 @@
       document.getElementById('prod-dimensions').value = p.dimensions || '';
       document.getElementById('prod-seat').value = p.seatHeight || '';
       document.getElementById('prod-image').value = p.image || '';
-      document.getElementById('prod-3d').value = p.model3d || '';
 
       if (p.colors && p.colors[0]) {
         const picker1 = document.getElementById('color-picker-1');
@@ -1117,14 +969,6 @@
       const photoBadge = document.getElementById('photo-filename-badge');
       photoBadge.textContent = 'Current image loaded';
       photoBadge.classList.remove('hidden');
-
-      const modelBadge = document.getElementById('model3d-filename-badge');
-      if (p.model3d) {
-        modelBadge.textContent = '3D model attached';
-        modelBadge.classList.remove('hidden');
-      } else {
-        modelBadge.classList.add('hidden');
-      }
 
       updateLivePreview();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1153,7 +997,6 @@
       document.getElementById('cancel-edit-btn').classList.add('hidden');
       document.getElementById('submit-btn').innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i> Save Piece to Catalog`;
       document.getElementById('photo-filename-badge').classList.add('hidden');
-      document.getElementById('model3d-filename-badge').classList.add('hidden');
       updateLivePreview();
       if (window.lucide) lucide.createIcons();
     }
@@ -1188,7 +1031,6 @@
       const dimensions = document.getElementById('prod-dimensions').value.trim() || 'Custom Dimensions';
       const seatHeight = document.getElementById('prod-seat').value.trim() || 'Standard';
       const image = document.getElementById('prod-image').value.trim();
-      const model3d = document.getElementById('prod-3d').value.trim() || null;
 
       const color1 = document.getElementById('color-picker-1')?.value || '#D4B996';
       const color2 = document.getElementById('color-picker-2')?.value || '#262626';
@@ -1218,7 +1060,6 @@
             dimensions,
             seatHeight,
             image,
-            model3d,
             colors: [color1, color2],
             colorNames: [colorName1, colorName2]
           };
@@ -1243,7 +1084,6 @@
           colors: [color1, color2],
           colorNames: [colorName1, colorName2],
           image,
-          model3d,
           hidden: false,
           description: `Handcrafted ${name} constructed with pure architectural form and sustainable FSC-certified joinery.`
         };
@@ -1268,7 +1108,6 @@
       const origPrice = parseFloat(document.getElementById('prod-orig-price').value) || null;
       const tag = document.getElementById('prod-tag').value || 'Bestseller';
       const image = document.getElementById('prod-image').value || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
-      const model3d = document.getElementById('prod-3d').value.trim();
       const category = document.querySelector('input[name="category"]:checked')?.value || 'sofas';
       const material = document.getElementById('prod-material').value || 'Textured Bouclé & White Oak';
 
@@ -1282,11 +1121,6 @@
               <span class="px-2.5 py-1 text-[10px] font-semibold uppercase bg-white/95 rounded-full shadow-sm text-stone-900">${tag}</span>
               ${discount ? `<span class="px-2 py-0.5 text-[9px] font-bold uppercase bg-amber-800 text-white rounded-full">Save ${discount}%</span>` : ''}
             </div>
-            ${model3d ? `
-              <span class="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold uppercase bg-stone-900 text-white rounded-full flex items-center gap-1 shadow">
-                <i data-lucide="box" class="w-3 h-3 text-amber-300"></i> 3D
-              </span>
-            ` : ''}
           </div>
           <div class="p-4">
             <span class="text-[10px] uppercase font-semibold text-stone-400 block mb-0.5">${category}</span>
@@ -1300,26 +1134,6 @@
         </div>
       `;
 
-      // 3D Preview Box
-      const box3D = document.getElementById('preview-3d-box');
-      const slot3D = document.getElementById('preview-3d-slot');
-      if (model3d) {
-        box3D.classList.remove('hidden');
-        slot3D.innerHTML = `
-          <model-viewer 
-            src="${model3d}" 
-            alt="3D Preview" 
-            auto-rotate 
-            camera-controls 
-            shadow-intensity="1.2" 
-            class="w-full h-full min-h-[280px]">
-          </model-viewer>
-        `;
-      } else {
-        box3D.classList.add('hidden');
-        slot3D.innerHTML = '';
-      }
-
       if (window.lucide) lucide.createIcons();
     }
 
@@ -1332,11 +1146,6 @@
         "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=800&q=80"
       ];
       document.getElementById('prod-image').value = samples[Math.floor(Math.random() * samples.length)];
-      updateLivePreview();
-    }
-
-    function insertSample3D() {
-      document.getElementById('prod-3d').value = "https://modelviewer.dev/shared-assets/models/SheenChair.glb";
       updateLivePreview();
     }
 
